@@ -1,0 +1,5 @@
+*.exe
+*.dll
+*.fro
+vendor/
+go.work
