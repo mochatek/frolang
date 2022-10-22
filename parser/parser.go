@@ -186,6 +186,8 @@ func (parser *Parser) ParseProgram() *ast.Program {
 // Applies parse function to the statement based on current token's type
 func (parser *Parser) parseStatement() ast.Statement {
 	switch parser.curToken.Type {
+	case token.O_COMMENT:
+		return parser.parseComment()
 	case token.LET:
 		return parser.parseLetStatement()
 	case token.RETURN:
@@ -193,6 +195,15 @@ func (parser *Parser) parseStatement() ast.Statement {
 	default:
 		return parser.parseExpressionStatement()
 	}
+}
+
+// /* COMMENT */
+// Example: /* This is a comment */
+func (parser *Parser) parseComment() ast.Statement {
+	for !parser.curTokenIs(token.C_COMMENT) && !parser.curTokenIs(token.EOF) {
+		parser.scanToken()
+	}
+	return nil
 }
 
 // LET IDENTIFIER = EXPRESSION

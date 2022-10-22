@@ -81,10 +81,6 @@ func (lexer *Lexer) ReadToken() token.Token {
 		tok = createToken(token.PLUS, lexer.char)
 	case '-':
 		tok = createToken(token.MINUS, lexer.char)
-	case '*':
-		tok = createToken(token.ASTERISK, lexer.char)
-	case '/':
-		tok = createToken(token.SLASH, lexer.char)
 	case '(':
 		tok = createToken(token.L_PAREN, lexer.char)
 	case ')':
@@ -107,6 +103,22 @@ func (lexer *Lexer) ReadToken() token.Token {
 		tok = createToken(token.AND, lexer.char)
 	case '|':
 		tok = createToken(token.OR, lexer.char)
+	case '/':
+		if lexer.peekCharIs('*') {
+			char := lexer.char
+			lexer.readChar()
+			tok = token.Token{Type: token.O_COMMENT, Literal: string(char) + string(lexer.char)}
+		} else {
+			tok = createToken(token.SLASH, lexer.char)
+		}
+	case '*':
+		if lexer.peekCharIs('/') {
+			char := lexer.char
+			lexer.readChar()
+			tok = token.Token{Type: token.C_COMMENT, Literal: string(char) + string(lexer.char)}
+		} else {
+			tok = createToken(token.ASTERISK, lexer.char)
+		}
 	case '=':
 		if lexer.peekCharIs('=') {
 			char := lexer.char

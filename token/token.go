@@ -53,6 +53,8 @@ const (
 	COMMA     = ","
 	SEMICOLON = ";"
 	COLON     = ":"
+	O_COMMENT = "/*"
+	C_COMMENT = "*/"
 )
 
 // Keywords
