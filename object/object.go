@@ -143,7 +143,7 @@ type Error struct {
 }
 
 func (err *Error) Type() ObjectType { return ERROR_OBJ }
-func (err *Error) Inspect() string  { return "ERROR: " + err.Message }
+func (err *Error) Inspect() string  { return "EVAL ERROR: " + err.Message }
 
 type builtinFunction func(arguments ...Object) Object
 
