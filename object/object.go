@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	NUMBER_OBJ   = "NUMBER"
+	INTEGER_OBJ  = "INTEGER"
+	FLOAT_OBJ    = "FLOAT"
 	STRING_OBJ   = "STRING"
 	BOOLEAN_OBJ  = "BOOLEAN"
 	ARRAY_OBJ    = "ARRAY"
@@ -41,14 +42,24 @@ type Hashable interface {
 	HashKey() HashKey
 }
 
-type Number struct {
+type Integer struct {
 	Value int
 }
 
-func (number *Number) Type() ObjectType { return NUMBER_OBJ }
-func (number *Number) Inspect() string  { return fmt.Sprintf("%d", number.Value) }
-func (number *Number) HashKey() HashKey {
-	return HashKey{Type: number.Type(), Value: uint64(number.Value)}
+func (integer *Integer) Type() ObjectType { return INTEGER_OBJ }
+func (integer *Integer) Inspect() string  { return fmt.Sprintf("%d", integer.Value) }
+func (integer *Integer) HashKey() HashKey {
+	return HashKey{Type: integer.Type(), Value: uint64(integer.Value)}
+}
+
+type Float struct {
+	Value float64
+}
+
+func (float *Float) Type() ObjectType { return FLOAT_OBJ }
+func (float *Float) Inspect() string  { return fmt.Sprintf("%.2f", float.Value) }
+func (float *Float) HashKey() HashKey {
+	return HashKey{Type: float.Type(), Value: uint64(float.Value)}
 }
 
 type Boolean struct {

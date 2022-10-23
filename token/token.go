@@ -10,7 +10,8 @@ type Token struct {
 // Identifiers and Literals
 const (
 	IDENTIFIER = "IDENTIFIER"
-	NUMBER     = "NUMBER"
+	INTEGER    = "INTEGER"
+	FLOAT      = "FLOAT"
 	TRUE       = "TRUE"
 	FALSE      = "FALSE"
 	STRING     = "STRING"

@@ -56,8 +56,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalCallExpression(node, env)
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
-	case *ast.NumberLiteral:
-		return &object.Number{Value: node.Value}
+	case *ast.IntegerLiteral:
+		return &object.Integer{Value: node.Value}
+	case *ast.FloatLiteral:
+		return &object.Float{Value: node.Value}
 	case *ast.BooleanLiteral:
 		return nativeToBooleanObject(node.Value)
 	case *ast.StringLiteral:
@@ -218,14 +220,14 @@ func evalIndexExpression(node *ast.IndexExpression, env *object.Environment) obj
 	}
 
 	switch {
-	case left.Type() == object.ARRAY_OBJ && index.Type() == object.NUMBER_OBJ:
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalArrayIndexExpression(left, index)
-	case left.Type() == object.STRING_OBJ && index.Type() == object.NUMBER_OBJ:
+	case left.Type() == object.STRING_OBJ && index.Type() == object.INTEGER_OBJ:
 		return evalStringIndexExpression(left, index)
 	case left.Type() == object.HASH_OBJ:
 		return evalHashIndexExpression(left, index)
 	default:
-		return newError("Index operator not supported for: %s", left.Type())
+		return newError("Index operation not supported for: %s[%s]", left.Type(), index.Type())
 	}
 }
 
@@ -233,7 +235,7 @@ func evalIndexExpression(node *ast.IndexExpression, env *object.Environment) obj
 // If index exceeded array length, then return NULL
 func evalArrayIndexExpression(array, index object.Object) object.Object {
 	arrayObject := array.(*object.Array)
-	idx := index.(*object.Number).Value
+	idx := index.(*object.Integer).Value
 	max := len(arrayObject.Elements) - 1
 
 	if idx < 0 || idx > max {
@@ -246,7 +248,7 @@ func evalArrayIndexExpression(array, index object.Object) object.Object {
 // If index exceeded string length, then return NULL
 func evalStringIndexExpression(str, index object.Object) object.Object {
 	strObject := str.(*object.String)
-	idx := index.(*object.Number).Value
+	idx := index.(*object.Integer).Value
 	max := len(strObject.Value) - 1
 
 	if idx < 0 || idx > max {
@@ -348,25 +350,23 @@ func unwrapReturnValue(obj object.Object) object.Object {
 // If the operator is a valid infix operator, then perform that operation on the operands and return result
 // Otherwise return unknown operator error
 func evalInfixOperation(leftOperand object.Object, operator string, rightOperand object.Object) object.Object {
-	if operator == token.AND {
-		return nativeToBooleanObject(isTrue(leftOperand) && isTrue(rightOperand))
-	} else if operator == token.OR {
-		return nativeToBooleanObject(isTrue(leftOperand) || isTrue(rightOperand))
-	} else if operator == token.IN {
-		return evalInExpression(leftOperand, rightOperand)
-	}
-
 	switch {
-	case leftOperand.Type() != rightOperand.Type():
-		return newError("Type mismatch: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
-	case leftOperand.Type() == object.NUMBER_OBJ:
+	case operator == token.AND:
+		return nativeToBooleanObject(isTrue(leftOperand) && isTrue(rightOperand))
+	case operator == token.OR:
+		return nativeToBooleanObject(isTrue(leftOperand) || isTrue(rightOperand))
+	case operator == token.IN:
+		return evalInExpression(leftOperand, rightOperand)
+	case (leftOperand.Type() == object.INTEGER_OBJ || leftOperand.Type() == object.FLOAT_OBJ) && (rightOperand.Type() == object.INTEGER_OBJ || rightOperand.Type() == object.FLOAT_OBJ):
 		return evalArithmeticExpression(leftOperand, operator, rightOperand)
-	case leftOperand.Type() == object.STRING_OBJ:
+	case leftOperand.Type() == object.STRING_OBJ && rightOperand.Type() == object.STRING_OBJ:
 		return evalStringOperation(leftOperand, operator, rightOperand)
 	case operator == token.EQ:
 		return nativeToBooleanObject(leftOperand == rightOperand)
 	case operator == token.NOT_EQ:
 		return nativeToBooleanObject(leftOperand != rightOperand)
+	case leftOperand.Type() != rightOperand.Type():
+		return newError("Type mismatch: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
 	default:
 		return newError("Unknown operator: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
 	}
@@ -375,9 +375,12 @@ func evalInfixOperation(leftOperand object.Object, operator string, rightOperand
 // If operand is number, do a minus operation and return the result
 // Else, return invalid operand error
 func evalMinusExpression(operand object.Object) object.Object {
-	if operand.Type() == object.NUMBER_OBJ {
-		value := operand.(*object.Number).Value
-		return &object.Number{Value: -value}
+	if operand.Type() == object.INTEGER_OBJ {
+		value := operand.(*object.Integer).Value
+		return &object.Integer{Value: -value}
+	} else if operand.Type() == object.FLOAT_OBJ {
+		value := operand.(*object.Float).Value
+		return &object.Float{Value: -value}
 	} else {
 		return newError("Invalid operand: -%s", operand.Type())
 	}
@@ -388,21 +391,129 @@ func evalBangExpression(operand object.Object) object.Object {
 	return nativeToBooleanObject(!isTrue(operand))
 }
 
-// If operator is a valid arithmetic operator, then perform the operation and return the result
-// Else return unknown operator error
+// Check left and right operands, perform the appropriate arithmetic operation and return the result
 func evalArithmeticExpression(leftOperand object.Object, operator string, rightOperand object.Object) object.Object {
-	leftValue := leftOperand.(*object.Number).Value
-	rightValue := rightOperand.(*object.Number).Value
+	var resultObject object.Object
+	switch {
+	case leftOperand.Type() == object.INTEGER_OBJ && rightOperand.Type() == object.INTEGER_OBJ:
+		resultObject = evalIntOperation(leftOperand.(*object.Integer), operator, rightOperand.(*object.Integer))
+	case leftOperand.Type() == object.FLOAT_OBJ && rightOperand.Type() == object.FLOAT_OBJ:
+		resultObject = evalFloatOperation(leftOperand.(*object.Float), operator, rightOperand.(*object.Float))
+	case leftOperand.Type() == object.INTEGER_OBJ && rightOperand.Type() == object.FLOAT_OBJ:
+		resultObject = evalIntFloatOperation(leftOperand.(*object.Integer), operator, rightOperand.(*object.Float))
+	case leftOperand.Type() == object.FLOAT_OBJ && rightOperand.Type() == object.INTEGER_OBJ:
+		resultObject = evalFloatIntOperation(leftOperand.(*object.Float), operator, rightOperand.(*object.Integer))
+	}
+	return resultObject
+}
+
+// Return the result of arithmetic operation between two integer operands
+func evalIntOperation(leftOperand *object.Integer, operator string, rightOperand *object.Integer) object.Object {
+	leftValue := leftOperand.Value
+	rightValue := rightOperand.Value
 
 	switch operator {
 	case token.PLUS:
-		return &object.Number{Value: leftValue + rightValue}
+		return &object.Integer{Value: leftValue + rightValue}
 	case token.MINUS:
-		return &object.Number{Value: leftValue - rightValue}
+		return &object.Integer{Value: leftValue - rightValue}
 	case token.ASTERISK:
-		return &object.Number{Value: leftValue * rightValue}
+		return &object.Integer{Value: leftValue * rightValue}
 	case token.SLASH:
-		return &object.Number{Value: leftValue / rightValue}
+		return &object.Integer{Value: leftValue / rightValue}
+	case token.EQ:
+		return nativeToBooleanObject(leftValue == rightValue)
+	case token.NOT_EQ:
+		return nativeToBooleanObject(leftValue != rightValue)
+	case token.LT:
+		return nativeToBooleanObject(leftValue < rightValue)
+	case token.LT_EQ:
+		return nativeToBooleanObject(leftValue <= rightValue)
+	case token.GT:
+		return nativeToBooleanObject(leftValue > rightValue)
+	case token.GT_EQ:
+		return nativeToBooleanObject(leftValue >= rightValue)
+	default:
+		return newError("Unknown operator: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
+	}
+}
+
+// Return the result of arithmetic operation between two float operands
+func evalFloatOperation(leftOperand *object.Float, operator string, rightOperand *object.Float) object.Object {
+	leftValue := leftOperand.Value
+	rightValue := rightOperand.Value
+
+	switch operator {
+	case token.PLUS:
+		return &object.Float{Value: leftValue + rightValue}
+	case token.MINUS:
+		return &object.Float{Value: leftValue - rightValue}
+	case token.ASTERISK:
+		return &object.Float{Value: leftValue * rightValue}
+	case token.SLASH:
+		return &object.Float{Value: leftValue / rightValue}
+	case token.EQ:
+		return nativeToBooleanObject(leftValue == rightValue)
+	case token.NOT_EQ:
+		return nativeToBooleanObject(leftValue != rightValue)
+	case token.LT:
+		return nativeToBooleanObject(leftValue < rightValue)
+	case token.LT_EQ:
+		return nativeToBooleanObject(leftValue <= rightValue)
+	case token.GT:
+		return nativeToBooleanObject(leftValue > rightValue)
+	case token.GT_EQ:
+		return nativeToBooleanObject(leftValue >= rightValue)
+	default:
+		return newError("Unknown operator: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
+	}
+}
+
+// Return the result of arithmetic operation between int & float operands
+func evalIntFloatOperation(leftOperand *object.Integer, operator string, rightOperand *object.Float) object.Object {
+	leftValue := float64(leftOperand.Value)
+	rightValue := rightOperand.Value
+
+	switch operator {
+	case token.PLUS:
+		return &object.Float{Value: leftValue + rightValue}
+	case token.MINUS:
+		return &object.Float{Value: leftValue - rightValue}
+	case token.ASTERISK:
+		return &object.Float{Value: leftValue * rightValue}
+	case token.SLASH:
+		return &object.Float{Value: leftValue / rightValue}
+	case token.EQ:
+		return nativeToBooleanObject(leftValue == rightValue)
+	case token.NOT_EQ:
+		return nativeToBooleanObject(leftValue != rightValue)
+	case token.LT:
+		return nativeToBooleanObject(leftValue < rightValue)
+	case token.LT_EQ:
+		return nativeToBooleanObject(leftValue <= rightValue)
+	case token.GT:
+		return nativeToBooleanObject(leftValue > rightValue)
+	case token.GT_EQ:
+		return nativeToBooleanObject(leftValue >= rightValue)
+	default:
+		return newError("Unknown operator: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
+	}
+}
+
+// Return the result of arithmetic operation between float & int operands
+func evalFloatIntOperation(leftOperand *object.Float, operator string, rightOperand *object.Integer) object.Object {
+	leftValue := leftOperand.Value
+	rightValue := float64(rightOperand.Value)
+
+	switch operator {
+	case token.PLUS:
+		return &object.Float{Value: leftValue + rightValue}
+	case token.MINUS:
+		return &object.Float{Value: leftValue - rightValue}
+	case token.ASTERISK:
+		return &object.Float{Value: leftValue * rightValue}
+	case token.SLASH:
+		return &object.Float{Value: leftValue / rightValue}
 	case token.EQ:
 		return nativeToBooleanObject(leftValue == rightValue)
 	case token.NOT_EQ:
@@ -529,8 +640,12 @@ func isTrue(obj object.Object) bool {
 	switch variable := obj.(type) {
 	case *object.Boolean:
 		return variable.Value
-	case *object.Number:
-		if variable.Value > 0 {
+	case *object.Integer:
+		if variable.Value != 0 {
+			return true
+		}
+	case *object.Float:
+		if variable.Value != 0 {
 			return true
 		}
 	case *object.String:

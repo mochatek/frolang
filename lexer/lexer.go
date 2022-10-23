@@ -1,6 +1,9 @@
 package lexer
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/mochatek/frolang/token"
 )
 
@@ -162,7 +165,8 @@ func (lexer *Lexer) ReadToken() token.Token {
 			return tok
 		} else if isNumber(lexer.char) {
 			number := lexer.readAheadIfPeekChar(isNumber)
-			tok = token.Token{Type: token.NUMBER, Literal: number}
+			numberType := resolveNumberType(number)
+			tok = token.Token{Type: numberType, Literal: number}
 			return tok
 		}
 		tok = createToken(token.ILLEGAL, lexer.char)
@@ -191,10 +195,21 @@ func isLetter(char byte) bool {
 
 // Helper function to check for valid digit
 func isNumber(char byte) bool {
-	return '0' <= char && char <= '9'
+	return '0' <= char && char <= '9' || char == '.' || char == '-'
 }
 
 // Lookup in keyword dictionary to decide whether the supplied string is a keyword/identifier
 func resolveType(word string) token.TokenType {
 	return token.LookUpKeywords(word)
+}
+
+// Helper function to get the appropriate token type for a number string
+func resolveNumberType(number string) token.TokenType {
+	if _, err := strconv.ParseFloat(number, 64); err != nil {
+		return token.ILLEGAL
+	}
+	if strings.Contains(number, ".") {
+		return token.FLOAT
+	}
+	return token.INTEGER
 }

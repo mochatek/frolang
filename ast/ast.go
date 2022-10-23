@@ -240,14 +240,23 @@ func (identifier *Identifier) expressionNode()      {}
 func (identifier *Identifier) TokenLiteral() string { return identifier.Token.Literal }
 func (identifier *Identifier) String() string       { return identifier.Value }
 
-type NumberLiteral struct {
+type IntegerLiteral struct {
 	Token token.Token
 	Value int
 }
 
-func (numberLiteral *NumberLiteral) expressionNode()      {}
-func (numberLiteral *NumberLiteral) TokenLiteral() string { return numberLiteral.Token.Literal }
-func (numberLiteral *NumberLiteral) String() string       { return numberLiteral.TokenLiteral() }
+func (integerLiteral *IntegerLiteral) expressionNode()      {}
+func (integerLiteral *IntegerLiteral) TokenLiteral() string { return integerLiteral.Token.Literal }
+func (integerLiteral *IntegerLiteral) String() string       { return integerLiteral.TokenLiteral() }
+
+type FloatLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func (floatLiteral *FloatLiteral) expressionNode()      {}
+func (floatLiteral *FloatLiteral) TokenLiteral() string { return floatLiteral.Token.Literal }
+func (floatLiteral *FloatLiteral) String() string       { return floatLiteral.TokenLiteral() }
 
 type BooleanLiteral struct {
 	Token token.Token

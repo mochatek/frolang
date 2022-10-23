@@ -67,7 +67,8 @@ func New(lexer *lexer.Lexer) *Parser {
 	parser.infixParsers = make(map[token.TokenType]infixParser)
 
 	parser.registerPrefixParser(token.IDENTIFIER, parser.parseIdentifier)
-	parser.registerPrefixParser(token.NUMBER, parser.parseNumberLiteral)
+	parser.registerPrefixParser(token.INTEGER, parser.parseIntegerLiteral)
+	parser.registerPrefixParser(token.FLOAT, parser.parseFloatLiteral)
 	parser.registerPrefixParser(token.STRING, parser.parseStringLiteral)
 	parser.registerPrefixParser(token.TRUE, parser.parseBooleanLiteral)
 	parser.registerPrefixParser(token.FALSE, parser.parseBooleanLiteral)
@@ -276,6 +277,9 @@ func (parser *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := parser.prefixParsers[parser.curToken.Type]
 	if prefix == nil {
 		message := fmt.Sprintf("No prefix parse function registered for %s", parser.curToken.Type)
+		if parser.curToken.Type == token.ILLEGAL {
+			message = fmt.Sprintf("Illegal token: %s", parser.curToken.Literal)
+		}
 		parser.errors = append(parser.errors, message)
 		return nil
 	}
@@ -393,18 +397,33 @@ func (parser *Parser) parseIdentifier() ast.Expression {
 	return identifier
 }
 
-// NUMBER
+// INTEGER
 // Example: 10
-func (parser *Parser) parseNumberLiteral() ast.Expression {
-	numberLiteral := &ast.NumberLiteral{Token: parser.curToken}
-	value, ok := strconv.Atoi(parser.curToken.Literal)
-	if ok != nil {
-		message := fmt.Sprintf("Could not parse %q as number", parser.curToken.Literal)
+func (parser *Parser) parseIntegerLiteral() ast.Expression {
+	integerLiteral := &ast.IntegerLiteral{Token: parser.curToken}
+	value, err := strconv.Atoi(parser.curToken.Literal)
+	if err != nil {
+		message := fmt.Sprintf("Could not parse %q as integer", parser.curToken.Literal)
 		parser.errors = append(parser.errors, message)
 		return nil
 	} else {
-		numberLiteral.Value = value
-		return numberLiteral
+		integerLiteral.Value = value
+		return integerLiteral
+	}
+}
+
+// FLOAT (64-bit)
+// Example: 10.28
+func (parser *Parser) parseFloatLiteral() ast.Expression {
+	floatLiteral := &ast.FloatLiteral{Token: parser.curToken}
+	value, err := strconv.ParseFloat(parser.curToken.Literal, 64)
+	if err != nil {
+		message := fmt.Sprintf("Could not parse %q as float", parser.curToken.Literal)
+		parser.errors = append(parser.errors, message)
+		return nil
+	} else {
+		floatLiteral.Value = value
+		return floatLiteral
 	}
 }
 

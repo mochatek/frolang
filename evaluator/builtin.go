@@ -65,11 +65,11 @@ func length(arguments ...object.Object) object.Object {
 	}
 	switch arg := arguments[0].(type) {
 	case *object.String:
-		return &object.Number{Value: len(arg.Value)}
+		return &object.Integer{Value: len(arg.Value)}
 	case *object.Array:
-		return &object.Number{Value: len(arg.Elements)}
+		return &object.Integer{Value: len(arg.Elements)}
 	case *object.Hash:
-		return &object.Number{Value: len(arg.Pairs)}
+		return &object.Integer{Value: len(arg.Pairs)}
 	default:
 		return newError("Cannot calculate len for argument of type %s", arguments[0].Type())
 	}
@@ -111,13 +111,13 @@ func slice(arguments ...object.Object) object.Object {
 		return newError("Cannot perform slice on argument of type %s", arguments[0].Type())
 	}
 	iterable := arguments[0].(object.Iterable)
-	if arguments[1].Type() != arguments[2].Type() || arguments[1].Type() != object.NUMBER_OBJ {
-		return newError("Start and End values should be NUMBER. Got=%s, %s", arguments[1].Type(), arguments[2].Type())
+	if arguments[1].Type() != arguments[2].Type() || arguments[1].Type() != object.INTEGER_OBJ {
+		return newError("Start and End values should be INTEGERS. Got=%s, %s", arguments[1].Type(), arguments[2].Type())
 	}
 
 	length := _len(iterable)
-	start := arguments[1].(*object.Number).Value
-	end := min(arguments[2].(*object.Number).Value, length)
+	start := arguments[1].(*object.Integer).Value
+	end := min(arguments[2].(*object.Integer).Value, length)
 	if 0 > start || start > length || start > end {
 		return newError("For slicing, (0 <= start < length) and (start <= end). Got start=%d, end=%d", start, end)
 	}
@@ -137,17 +137,17 @@ func rangeOf(arguments ...object.Object) object.Object {
 	if len(arguments) != 2 {
 		return newError("Wrong number of arguments. Got=%d want=2", len(arguments))
 	}
-	if arguments[0].Type() != arguments[1].Type() || arguments[0].Type() != object.NUMBER_OBJ {
-		return newError("Argument to range must be NUMBER. Got %s", arguments[0].Type())
+	if arguments[0].Type() != arguments[1].Type() || arguments[0].Type() != object.INTEGER_OBJ {
+		return newError("Argument to range must be INTEGERS. Got %s", arguments[0].Type())
 	}
-	start := arguments[0].(*object.Number).Value
-	end := arguments[1].(*object.Number).Value
+	start := arguments[0].(*object.Integer).Value
+	end := arguments[1].(*object.Integer).Value
 	if end < start {
 		return newError("Need (end >= start). Got start=%d end=%d", start, end)
 	}
 	elements := make([]object.Object, end-start, end-start)
 	for idx, _ := range elements {
-		elements[idx] = &object.Number{Value: start}
+		elements[idx] = &object.Integer{Value: start}
 		start++
 	}
 	return &object.Array{Elements: elements}
