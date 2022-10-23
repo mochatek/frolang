@@ -1,7 +1,9 @@
 # 🐸 FroLang v0.0.1
 FroLang is a toy language created for the sole purpose of learning how to build an interpreter and to sharpen my Go skills.
 
-![FroLang Logo](https://github.com/mochatek/frolang/blob/master/logo.png)
+<p align="center">
+  <img src="https://github.com/mochatek/frolang/blob/master/logo.png" alt="Logo" />
+</p>
 
 __How does it work?__
 
