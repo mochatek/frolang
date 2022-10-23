@@ -15,6 +15,7 @@ FroLang interpreter uses an approach called _Tree-Walking_, which parses the sou
 4. __Evaluation__: runs through the AST evaluating all expressions.
 
 ## Installation and Usage
+You can follow any of these methods to install and use FroLang:
 
 1. Running from this project:
     - Clone this repo
