@@ -275,7 +275,6 @@ for (i in range(1, 3)) {
 |_delete_(hash, key)_|Returns a new hash with the key-value pair removed for the supplied key|`delete({1: "one", "two": 2}, 1)`|
 
 ## To-Do
-- [ ] Assignment expression `version = version + 1`
 - [ ] Controls statements: `break, continue`
 - [ ] While loop
 - [ ] Error handling: `try - catch`

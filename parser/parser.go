@@ -38,6 +38,7 @@ const (
 
 // Operator precedence
 var precedenceMap = map[token.TokenType]int{
+	token.ASSIGN:    EQUALS,
 	token.EQ:        EQUALS,
 	token.NOT_EQ:    EQUALS,
 	token.AND:       EQUALS,
@@ -96,6 +97,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	parser.registerInfixParser(token.IN, parser.parseInfixExpression)
 	parser.registerInfixParser(token.L_PAREN, parser.parseCallExpression)
 	parser.registerInfixParser(token.L_BRACKET, parser.parseIndexExpression)
+	parser.registerInfixParser(token.ASSIGN, parser.parseAssignExpression)
 
 	return parser
 }
@@ -498,6 +500,21 @@ func (parser *Parser) parseIndexExpression(array ast.Expression) ast.Expression 
 		return nil
 	}
 	return indexExpression
+}
+
+// VARIABLE = VALUE
+// Example: name = "FroLang"
+func (parser *Parser) parseAssignExpression(identifier ast.Expression) ast.Expression {
+	variable, ok := identifier.(*ast.Identifier)
+	if !ok {
+		message := fmt.Sprintf("Cannot assign value to a non-identifier")
+		parser.errors = append(parser.errors, message)
+		return nil
+	}
+	parser.scanToken()
+	value := parser.parseExpression(LOWEST)
+	assignExpression := ast.AssignExpression{Token: parser.curToken, Variable: variable, Value: value}
+	return &assignExpression
 }
 
 // ( EXPRESSION, EXPRESSION )

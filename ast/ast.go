@@ -149,6 +149,24 @@ func (infixExpression *InfixExpression) String() string {
 	return str.String()
 }
 
+type AssignExpression struct {
+	Token    token.Token
+	Variable *Identifier
+	Value    Expression
+}
+
+func (assignExpression *AssignExpression) expressionNode() {}
+func (assignExpression *AssignExpression) TokenLiteral() string {
+	return assignExpression.Token.Literal
+}
+func (assignExpression *AssignExpression) String() string {
+	var str strings.Builder
+	str.WriteString(assignExpression.Variable.String())
+	str.WriteString(" = ")
+	str.WriteString(assignExpression.Value.String())
+	return str.String()
+}
+
 type IndexExpression struct {
 	Token token.Token
 	Array Expression

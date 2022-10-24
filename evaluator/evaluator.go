@@ -46,6 +46,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
 		return evalInfixExpression(node, env)
+	case *ast.AssignExpression:
+		return evalAssignExpression(node, env)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
 	case *ast.ForExpression:
@@ -162,6 +164,24 @@ func evalInfixExpression(infixExpression *ast.InfixExpression, env *object.Envir
 	}
 	operator := infixExpression.Operator
 	return evalInfixOperation(leftOperand, operator, rightOperand)
+}
+
+// Evaluated assignment expression
+// Return error if variable is not defined before
+// Else, evaluate the value
+// If value evaluated to error, then return it
+// Else, set value to that variable in env and return the value
+func evalAssignExpression(assignExpression *ast.AssignExpression, env *object.Environment) object.Object {
+	variable := assignExpression.Variable
+	if _, ok := env.Get(variable.Value); !ok {
+		return newError("Identifier: %s is not defined at %s", variable.Value, variable.Token.Location)
+	}
+	value := Eval(assignExpression.Value, env)
+	if isError(value) {
+		return value
+	}
+	env.Set(variable.Value, value)
+	return value
 }
 
 // Evaluates a if expression
