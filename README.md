@@ -278,7 +278,6 @@ for (i in range(1, 3)) {
 - [ ] Assignment expression `version = version + 1`
 - [ ] Controls statements: `break, continue`
 - [ ] While loop
-- [ ] Line:Column number in error messages
 - [ ] Error handling: `try - catch`
 - [ ] Environment variables
 - [ ] Modules
