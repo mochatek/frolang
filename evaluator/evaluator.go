@@ -623,7 +623,7 @@ func evalIdentifier(identifier *ast.Identifier, env *object.Environment) object.
 	if builtin, ok := builtins[identifier.Value]; ok {
 		return builtin
 	}
-	return newError("Identifier: %s not found", identifier.Value)
+	return newError("Identifier: %s not found at %s", identifier.Value, identifier.Token.Location)
 }
 
 // Convert boolean value to boolean object

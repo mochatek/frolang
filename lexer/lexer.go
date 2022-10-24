@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -12,12 +13,14 @@ type Lexer struct {
 	char         byte
 	curPosition  int
 	peekPosition int
+	line         int
+	col          int
 }
 
 // Constructor function for lexer
 // Read once to init lexer fields before we start using it
 func New(input string) *Lexer {
-	lexer := &Lexer{input: input}
+	lexer := &Lexer{input: input, line: 1}
 	lexer.readChar()
 	return lexer
 }
@@ -33,6 +36,7 @@ func (lexer *Lexer) readChar() {
 	}
 	lexer.curPosition = lexer.peekPosition
 	lexer.peekPosition += 1
+	lexer.col += 1
 }
 
 // Equate character at peekPosition to what is expected
@@ -77,82 +81,84 @@ func (lexer *Lexer) ReadToken() token.Token {
 	var tok token.Token
 	lexer.skipWhiteSpace()
 
+	location := fmt.Sprintf("%d:%d", lexer.line, lexer.col)
+
 	switch lexer.char {
 	case 0:
-		tok = createToken(token.EOF, lexer.char)
+		tok = createToken(token.EOF, lexer.char, location)
 	case '+':
-		tok = createToken(token.PLUS, lexer.char)
+		tok = createToken(token.PLUS, lexer.char, location)
 	case '-':
-		tok = createToken(token.MINUS, lexer.char)
+		tok = createToken(token.MINUS, lexer.char, location)
 	case '(':
-		tok = createToken(token.L_PAREN, lexer.char)
+		tok = createToken(token.L_PAREN, lexer.char, location)
 	case ')':
-		tok = createToken(token.R_PAREN, lexer.char)
+		tok = createToken(token.R_PAREN, lexer.char, location)
 	case '{':
-		tok = createToken(token.L_BRACE, lexer.char)
+		tok = createToken(token.L_BRACE, lexer.char, location)
 	case '}':
-		tok = createToken(token.R_BRACE, lexer.char)
+		tok = createToken(token.R_BRACE, lexer.char, location)
 	case '[':
-		tok = createToken(token.L_BRACKET, lexer.char)
+		tok = createToken(token.L_BRACKET, lexer.char, location)
 	case ']':
-		tok = createToken(token.R_BRACKET, lexer.char)
+		tok = createToken(token.R_BRACKET, lexer.char, location)
 	case ',':
-		tok = createToken(token.COMMA, lexer.char)
+		tok = createToken(token.COMMA, lexer.char, location)
 	case ';':
-		tok = createToken(token.SEMICOLON, lexer.char)
+		tok = createToken(token.SEMICOLON, lexer.char, location)
 	case ':':
-		tok = createToken(token.COLON, lexer.char)
+		tok = createToken(token.COLON, lexer.char, location)
 	case '&':
-		tok = createToken(token.AND, lexer.char)
+		tok = createToken(token.AND, lexer.char, location)
 	case '|':
-		tok = createToken(token.OR, lexer.char)
+		tok = createToken(token.OR, lexer.char, location)
 	case '/':
 		if lexer.peekCharIs('*') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.O_COMMENT, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.O_COMMENT, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.SLASH, lexer.char)
+			tok = createToken(token.SLASH, lexer.char, location)
 		}
 	case '*':
 		if lexer.peekCharIs('/') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.C_COMMENT, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.C_COMMENT, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.ASTERISK, lexer.char)
+			tok = createToken(token.ASTERISK, lexer.char, location)
 		}
 	case '=':
 		if lexer.peekCharIs('=') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.EQ, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.EQ, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.ASSIGN, lexer.char)
+			tok = createToken(token.ASSIGN, lexer.char, location)
 		}
 	case '!':
 		if lexer.peekCharIs('=') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.NOT_EQ, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.NOT_EQ, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.BANG, lexer.char)
+			tok = createToken(token.BANG, lexer.char, location)
 		}
 	case '<':
 		if lexer.peekCharIs('=') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.LT_EQ, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.LT_EQ, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.LT, lexer.char)
+			tok = createToken(token.LT, lexer.char, location)
 		}
 	case '>':
 		if lexer.peekCharIs('=') {
 			char := lexer.char
 			lexer.readChar()
-			tok = token.Token{Type: token.GT_EQ, Literal: string(char) + string(lexer.char)}
+			tok = token.Token{Type: token.GT_EQ, Literal: string(char) + string(lexer.char), Location: location}
 		} else {
-			tok = createToken(token.GT, lexer.char)
+			tok = createToken(token.GT, lexer.char, location)
 		}
 	case '"':
 		tok.Type = token.STRING
@@ -161,15 +167,15 @@ func (lexer *Lexer) ReadToken() token.Token {
 		if isLetter(lexer.char) {
 			word := lexer.readAheadIfPeekChar(isLetter)
 			tokenType := resolveType(word) // word is identifier/keyword ?
-			tok = token.Token{Type: tokenType, Literal: word}
+			tok = token.Token{Type: tokenType, Literal: word, Location: location}
 			return tok
 		} else if isNumber(lexer.char) {
 			number := lexer.readAheadIfPeekChar(isNumber)
 			numberType := resolveNumberType(number)
-			tok = token.Token{Type: numberType, Literal: number}
+			tok = token.Token{Type: numberType, Literal: number, Location: location}
 			return tok
 		}
-		tok = createToken(token.ILLEGAL, lexer.char)
+		tok = createToken(token.ILLEGAL, lexer.char, location)
 	}
 
 	lexer.readChar()
@@ -177,15 +183,20 @@ func (lexer *Lexer) ReadToken() token.Token {
 }
 
 // Advance to next character if `char` is whitespace
+// Increment line counter if we hit new line character and reset col to 0
 func (lexer *Lexer) skipWhiteSpace() {
 	for lexer.char != 0 && (lexer.char == ' ' || lexer.char == '\t' || lexer.char == '\r' || lexer.char == '\n') {
+		if lexer.char == '\n' {
+			lexer.line += 1
+			lexer.col = 0
+		}
 		lexer.readChar()
 	}
 }
 
 // helper function to create token
-func createToken(tokenType token.TokenType, literal byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(literal)}
+func createToken(tokenType token.TokenType, literal byte, location string) token.Token {
+	return token.Token{Type: tokenType, Literal: string(literal), Location: location}
 }
 
 // Helper function to check for valid character
