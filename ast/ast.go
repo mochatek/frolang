@@ -228,6 +228,24 @@ func (forExpression *ForExpression) String() string {
 	return str.String()
 }
 
+type WhileExpression struct {
+	Token     token.Token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (whileExpression *WhileExpression) expressionNode()      {}
+func (whileExpression *WhileExpression) TokenLiteral() string { return whileExpression.Token.Literal }
+func (whileExpression *WhileExpression) String() string {
+	var str strings.Builder
+	str.WriteString(whileExpression.TokenLiteral())
+	str.WriteString("(")
+	str.WriteString(whileExpression.Condition.String())
+	str.WriteString(") ")
+	str.WriteString(whileExpression.Body.String())
+	return str.String()
+}
+
 type CallExpression struct {
 	Token     token.Token
 	Function  Expression

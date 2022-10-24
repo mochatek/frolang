@@ -65,6 +65,7 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	FOR      = "FOR"
+	WHILE    = "WHILE"
 	FUNCTION = "FUNCTION"
 	RETURN   = "RETURN"
 	IN       = "in"
@@ -84,6 +85,7 @@ var Keywords = map[string]TokenType{
 	"if":     IF,
 	"else":   ELSE,
 	"for":    FOR,
+	"while":  WHILE,
 	"fn":     FUNCTION,
 	"return": RETURN,
 }

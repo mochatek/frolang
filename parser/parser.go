@@ -81,6 +81,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	parser.registerPrefixParser(token.L_PAREN, parser.parseGroupedExpression)
 	parser.registerPrefixParser(token.IF, parser.parseIfExpression)
 	parser.registerPrefixParser(token.FOR, parser.parseForExpression)
+	parser.registerPrefixParser(token.WHILE, parser.parseWhileExpression)
 
 	parser.registerInfixParser(token.PLUS, parser.parseInfixExpression)
 	parser.registerInfixParser(token.MINUS, parser.parseInfixExpression)
@@ -389,6 +390,25 @@ func (parser *Parser) parseForExpression() ast.Expression {
 	}
 	forExpression.Body = parser.parseBlockStatement()
 	return forExpression
+}
+
+// WHILE(CONDITION) { BODY }
+// Example: while(num < 5) { print(num); num = num + 1 }
+func (parser *Parser) parseWhileExpression() ast.Expression {
+	whileExpression := &ast.WhileExpression{Token: parser.curToken}
+	if !parser.expectPeek(token.L_PAREN) {
+		return nil
+	}
+	parser.scanToken()
+	whileExpression.Condition = parser.parseExpression(LOWEST)
+	if !parser.expectPeek(token.R_PAREN) {
+		return nil
+	}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	whileExpression.Body = parser.parseBlockStatement()
+	return whileExpression
 }
 
 // IDENTIFIER

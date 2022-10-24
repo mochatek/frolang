@@ -52,6 +52,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIfExpression(node, env)
 	case *ast.ForExpression:
 		return evalForExpression(node, env)
+	case *ast.WhileExpression:
+		return evalWhileExpression(node, env)
 	case *ast.IndexExpression:
 		return evalIndexExpression(node, env)
 	case *ast.CallExpression:
@@ -222,6 +224,27 @@ func evalForExpression(forExpression *ast.ForExpression, env *object.Environment
 	for _, item := range array {
 		localEnv.Set(elementName, item)
 		Eval(forExpression.Body, localEnv)
+	}
+	return nil
+}
+
+// Provision a local environment and start an infinite loop
+// Evaluate the condition
+// If condition evaluated to an error, then return it immediately
+// If condition returned true, then execute body
+// If condition returned false, then break from loop
+func evalWhileExpression(whileExpression *ast.WhileExpression, env *object.Environment) object.Object {
+	localEnv := object.NewEnclosedEnvironment(env)
+	for {
+		condition := Eval(whileExpression.Condition, localEnv)
+		if isError(condition) {
+			return condition
+		}
+		if isTrue(condition) {
+			Eval(whileExpression.Body, localEnv)
+		} else {
+			break
+		}
 	}
 	return nil
 }

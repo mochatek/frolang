@@ -45,6 +45,8 @@ You can follow any of these methods to install and use FroLang:
   - [Presence operators](#presence-operators)
 - [Conditionals](#conditionals)
 - [Loops](#loops)
+    - [For in Loop](#for-in-loop)
+    - [While Loop](#while-loop)
 - [Builtin Methods](#builtin-methods)
 - [To-Do](#to-do)
 
@@ -224,8 +226,10 @@ if(rank == 1) {
 ```
 
 ## Loops
-- FroLang as of now, only has the `for` loop for iteration
-- You can use the `in` operator to iterate through each element of a sequence
+FroLang supports  `for in` and `while` loop for iteration
+
+### For in Loop
+- Used to iterate through each element of a sequence
 - In case of hash, iterating element is the key
 - For looping _n_ times, you can use `range(start, end)` to create a sequence of length: n
 
@@ -249,6 +253,19 @@ for (key in hash) {
 /* n = 2 */
 for (i in range(1, 3)) {
     print("count", i);
+}
+```
+
+### While Loop
+- Used to execute a block of code while a specified condition is true
+
+**Example**
+
+```js
+let count = 1;
+while (count < 3) {
+    print(count);
+    count = count + 1;
 }
 ```
 
@@ -276,7 +293,6 @@ for (i in range(1, 3)) {
 
 ## To-Do
 - [ ] Controls statements: `break, continue`
-- [ ] While loop
 - [ ] Error handling: `try - catch`
 - [ ] Environment variables
 - [ ] Modules
