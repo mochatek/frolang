@@ -208,7 +208,8 @@ Following operators are supported by FroLang:
 
 **Example**
 ```js
-let goals = 2;
+let name = "Ronaldinho";
+let goals = 5;
 let rank = if(goals >= 3) { 1 } else { 2 };
 
 if(rank == 1) {
@@ -230,23 +231,23 @@ if(rank == 1) {
 
 **Example**
 ```js
-/* string = "FroLang" */
-for char in string {
+let string = "FroLang";
+for (char in string) {
     print(char);
 }
 
-/* array = ["Pen", 5] */
-for element in array {
+let array = ["Pen", 5];
+for (element in array) {
     print(element);
 }
 
-/* hash = {"fb": 123, true: "Valid!"} */
-for key in hash {
+let hash = {"fb": 123, true: "Valid!"};
+for (key in hash) {
     print(key, hash[key]);
 }
 
 /* n = 2 */
-for i in range(1, 3) {
+for (i in range(1, 3)) {
     print("count", i);
 }
 ```
@@ -262,7 +263,7 @@ for i in range(1, 3) {
 |_slice(str_or_array, start, end)_|Returns a slice from start to end index of a string/array. End index is exclusive|`slice("MochaTek", 0, 5)`|
 |_range(start, end)_|Returns an integer array with elements ranging from start to end. End is exclusive|`range(0, 5)`|
 |_lower(str)_|Returns the lower case representation of a string|`lower("HeLlO")`|
-|_upper(str)_|Returns the upper case representation of a string|`lower("HeLlO")`|
+|_upper(str)_|Returns the upper case representation of a string|`upper("HeLlO")`|
 |_split(str)_|Returns an array with characters of a string as elements|`split("FroLang")`|
 |_join(array, sep=", ")_|Returns a string created by combing array elements separated by _sep_, which is _", "_ by default|`join(["F", "r", "o", "L", "a", "n", "g"], "")`|
 |_push(array, ...elements)_|Returns a new array with elements inserted at the end|`push([1, 2], 3, 4)`|
