@@ -207,17 +207,18 @@ Following operators are supported by FroLang:
 ## Conditionals
 - FroLang only has if and else. It doesn't have any elif or else if like in other languages
 - In FroLang, you can use `if - else` as an expression to mimic a ternary operation
+- Parentheses `()` around the condition is optional in FroLang
 
 **Example**
 ```js
 let name = "Ronaldinho";
 let goals = 5;
-let rank = if(goals >= 3) { 1 } else { 2 };
+let rank = if goals >= 3 { 1 } else { 2 };
 
 if(rank == 1) {
     print(name + " won 🥇");
 } else {
-    if(goals) {
+    if goals {
         print(name, " won 🥈");
     } else {
         print(name + " won 🥉");
@@ -232,6 +233,7 @@ FroLang supports  `for in` and `while` loop for iteration
 - Used to iterate through each element of a sequence
 - In case of hash, iterating element is the key
 - For looping _n_ times, you can use `range(start, end)` to create a sequence of length: n
+- Parentheses `()` around the loop expression is optional in FroLang
 
 **Example**
 ```js
@@ -241,7 +243,7 @@ for (char in string) {
 }
 
 let array = ["Pen", 5];
-for (element in array) {
+for element in array {
     print(element);
 }
 
@@ -251,19 +253,20 @@ for (key in hash) {
 }
 
 /* n = 2 */
-for (i in range(1, 3)) {
+for i in range(1, 3) {
     print("count", i);
 }
 ```
 
 ### While Loop
 - Used to execute a block of code while a specified condition is true
+- Parentheses `()` around the condition is optional in FroLang
 
 **Example**
 
 ```js
 let count = 1;
-while (count < 3) {
+while count < 3 {
     print(count);
     count = count + 1;
 }

@@ -210,7 +210,7 @@ func (ifExpression *IfExpression) String() string {
 type ForExpression struct {
 	Token    token.Token
 	Element  *Identifier
-	Iterable Expression
+	Iterator Expression
 	Body     *BlockStatement
 }
 
@@ -222,7 +222,7 @@ func (forExpression *ForExpression) String() string {
 	str.WriteString("(")
 	str.WriteString(forExpression.Element.String())
 	str.WriteString(" in ")
-	str.WriteString(forExpression.Iterable.String())
+	str.WriteString(forExpression.Iterator.String())
 	str.WriteString(") ")
 	str.WriteString(forExpression.Body.String())
 	return str.String()

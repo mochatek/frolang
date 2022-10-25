@@ -339,17 +339,19 @@ func (parser *Parser) parseCallExpression(function ast.Expression) ast.Expressio
 	return callExpression
 }
 
-// IF( CONDITION ) { CONSEQUENCE } <ELSE { ALTERNATE }>
-// Else part is optional
-// Example: if(age >= 18) { "Adult" } else { "Minor" }
+// IF CONDITION { CONSEQUENCE } <ELSE { ALTERNATE }>
+// Parentheses around condition and Else part is optional
+// Example: if age >= 18 { "Adult" } else { "Minor" }
 func (parser *Parser) parseIfExpression() ast.Expression {
 	ifExpression := &ast.IfExpression{Token: parser.curToken}
-	if !parser.expectPeek(token.L_PAREN) {
-		return nil
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
 	}
 	parser.scanToken()
 	ifExpression.Condition = parser.parseExpression(LOWEST)
-	if !parser.expectPeek(token.R_PAREN) {
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
 		return nil
 	}
 	if !parser.expectPeek(token.L_BRACE) {
@@ -366,12 +368,15 @@ func (parser *Parser) parseIfExpression() ast.Expression {
 	return ifExpression
 }
 
-// FOR(ELEMENT IN ITERABLE) { BODY }
-// Example: for(num in [1, 2, 3]) { print(num) }
+// FOR ELEMENT IN ITERABLE { BODY }
+// Parentheses around loop expression is optional
+// Example: for num in [1, 2, 3] { print(num) }
 func (parser *Parser) parseForExpression() ast.Expression {
 	forExpression := &ast.ForExpression{Token: parser.curToken}
-	if !parser.expectPeek(token.L_PAREN) {
-		return nil
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
 	}
 	if !parser.expectPeek(token.IDENTIFIER) {
 		return nil
@@ -381,8 +386,8 @@ func (parser *Parser) parseForExpression() ast.Expression {
 		return nil
 	}
 	parser.scanToken()
-	forExpression.Iterable = parser.parseExpression(LOWEST)
-	if !parser.expectPeek(token.R_PAREN) {
+	forExpression.Iterator = parser.parseExpression(LOWEST)
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
 		return nil
 	}
 	if !parser.expectPeek(token.L_BRACE) {
@@ -392,16 +397,19 @@ func (parser *Parser) parseForExpression() ast.Expression {
 	return forExpression
 }
 
-// WHILE(CONDITION) { BODY }
-// Example: while(num < 5) { print(num); num = num + 1 }
+// WHILE CONDITION { BODY }
+// Parentheses around condition is optional
+// Example: while num < 5 { print(num); num = num + 1 }
 func (parser *Parser) parseWhileExpression() ast.Expression {
 	whileExpression := &ast.WhileExpression{Token: parser.curToken}
-	if !parser.expectPeek(token.L_PAREN) {
-		return nil
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
 	}
 	parser.scanToken()
 	whileExpression.Condition = parser.parseExpression(LOWEST)
-	if !parser.expectPeek(token.R_PAREN) {
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
 		return nil
 	}
 	if !parser.expectPeek(token.L_BRACE) {

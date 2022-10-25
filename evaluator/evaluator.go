@@ -219,7 +219,7 @@ func evalIfExpression(ifExpression *ast.IfExpression, env *object.Environment) o
 // Return error immediately if body evaluates to error or returnValue
 // Before each iteration, set the element in the local environment
 func evalForExpression(forExpression *ast.ForExpression, env *object.Environment) object.Object {
-	iterObject := Eval(forExpression.Iterable, env)
+	iterObject := Eval(forExpression.Iterator, env)
 	iterable, ok := iterObject.(object.Iterable)
 	if !ok {
 		return newError("%s: is not iterable", iterObject.Type())
