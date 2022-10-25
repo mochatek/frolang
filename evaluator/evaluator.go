@@ -178,7 +178,7 @@ func evalInfixExpression(infixExpression *ast.InfixExpression, env *object.Envir
 // Return error if variable is not defined before
 // Else, evaluate the value
 // If value evaluated to error, then return it
-// Else, set value to that variable in env and return the value
+// Else, update value of that variable in env and return the value
 func evalAssignExpression(assignExpression *ast.AssignExpression, env *object.Environment) object.Object {
 	variable := assignExpression.Variable
 	if _, ok := env.Get(variable.Value); !ok {
@@ -188,8 +188,7 @@ func evalAssignExpression(assignExpression *ast.AssignExpression, env *object.En
 	if isError(value) {
 		return value
 	}
-	env.Set(variable.Value, value)
-	return value
+	return env.Update(variable.Value, value)
 }
 
 // Evaluates a if expression

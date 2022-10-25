@@ -11,6 +11,18 @@ func (environment *Environment) Set(name string, object Object) Object {
 	return object
 }
 
+// Updates value of supplied identifier in the environment in which it was declared
+func (environment *Environment) Update(name string, object Object) Object {
+	for env := environment; env != nil; env = env.outer {
+		if _, ok := env.store[name]; ok {
+			env.store[name] = object
+			return object
+		}
+	}
+	environment.store[name] = object
+	return object
+}
+
 // Retrieves value of supplied identifier from environment
 // If identifier is not present in current environment, look up in outer environment (Scope chain)
 func (environment *Environment) Get(name string) (Object, bool) {
