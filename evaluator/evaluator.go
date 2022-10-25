@@ -119,11 +119,17 @@ func evalReturnStatement(returnStatement *ast.ReturnStatement, env *object.Envir
 }
 
 // Evaluates a block statement
-// Final value that is returned is similar to evalProgram
+// Evaluate each statement in the block
+// Return error immediately if any statement evaluated to error
+// Return the result immediately if we encounter return statement
+// Otherwise return the final result as in parseProgram
 func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.Object {
 	var result object.Object
 	for _, statement := range block.Statements {
 		result = Eval(statement, env)
+		if isError(result) {
+			return result
+		}
 		if result != nil && result.Type() == object.RETURN_OBJ {
 			return result
 		}
@@ -211,6 +217,7 @@ func evalIfExpression(ifExpression *ast.IfExpression, env *object.Environment) o
 // Else, provision a local environment
 // Get the elements from the iterable object
 // Repeatedly evaluate the body length(element) times
+// Return error immediately if body evaluates to error or returnValue
 // Before each iteration, set the element in the local environment
 func evalForExpression(forExpression *ast.ForExpression, env *object.Environment) object.Object {
 	iterObject := Eval(forExpression.Iterable, env)
@@ -223,7 +230,12 @@ func evalForExpression(forExpression *ast.ForExpression, env *object.Environment
 	array := iterable.Iter().Elements
 	for _, item := range array {
 		localEnv.Set(elementName, item)
-		Eval(forExpression.Body, localEnv)
+		result := Eval(forExpression.Body, localEnv)
+		if isError(result) {
+			return result
+		} else if result != nil && result.Type() == object.RETURN_OBJ {
+			return result
+		}
 	}
 	return nil
 }
@@ -232,6 +244,7 @@ func evalForExpression(forExpression *ast.ForExpression, env *object.Environment
 // Evaluate the condition
 // If condition evaluated to an error, then return it immediately
 // If condition returned true, then execute body
+// Return error immediately if body evaluates to error or returnValue
 // If condition returned false, then break from loop
 func evalWhileExpression(whileExpression *ast.WhileExpression, env *object.Environment) object.Object {
 	localEnv := object.NewEnclosedEnvironment(env)
@@ -241,7 +254,12 @@ func evalWhileExpression(whileExpression *ast.WhileExpression, env *object.Envir
 			return condition
 		}
 		if isTrue(condition) {
-			Eval(whileExpression.Body, localEnv)
+			result := Eval(whileExpression.Body, localEnv)
+			if isError(result) {
+				return result
+			} else if result != nil && result.Type() == object.RETURN_OBJ {
+				return result
+			}
 		} else {
 			break
 		}
