@@ -121,14 +121,16 @@ func evalReturnStatement(returnStatement *ast.ReturnStatement, env *object.Envir
 }
 
 // Evaluates a block statement
-// Evaluate each statement in the block
+// Provision a local environment for the block
+// Evaluate each statement in the block with the local environment
 // Return error immediately if any statement evaluated to error
 // Return the result immediately if we encounter return statement
 // Otherwise return the final result as in parseProgram
 func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.Object {
 	var result object.Object
+	localEnv := object.NewEnclosedEnvironment(env)
 	for _, statement := range block.Statements {
-		result = Eval(statement, env)
+		result = Eval(statement, localEnv)
 		if isError(result) {
 			return result
 		}
