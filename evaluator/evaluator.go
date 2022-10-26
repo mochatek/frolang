@@ -40,22 +40,22 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalReturnStatement(node, env)
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, env)
+	case *ast.ForStatement:
+		return evalForStatement(node, env)
+	case *ast.WhileStatement:
+		return evalWhileStatement(node, env)
+	case *ast.TryStatement:
+		return evalTryStatement(node, env)
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case *ast.PrefixExpression:
 		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
 		return evalInfixExpression(node, env)
-	case *ast.TryExpression:
-		return evalTryExpression(node, env)
 	case *ast.AssignExpression:
 		return evalAssignExpression(node, env)
 	case *ast.IfExpression:
 		return evalIfExpression(node, env)
-	case *ast.ForExpression:
-		return evalForExpression(node, env)
-	case *ast.WhileExpression:
-		return evalWhileExpression(node, env)
 	case *ast.IndexExpression:
 		return evalIndexExpression(node, env)
 	case *ast.CallExpression:
@@ -139,6 +139,99 @@ func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) obje
 	return result
 }
 
+// Evaluates a for statement
+// If object is not iterable, then return error
+// Else, provision a local environment
+// Get the elements from the iterable object
+// Repeatedly evaluate the body length(element) times
+// Return error immediately if body evaluates to error or returnValue
+// Before each iteration, set the element in the local environment
+func evalForStatement(forStatement *ast.ForStatement, env *object.Environment) object.Object {
+	iterObject := Eval(forStatement.Iterator, env)
+	iterable, ok := iterObject.(object.Iterable)
+	if !ok {
+		return newError("%s: is not iterable", iterObject.Type())
+	}
+	elementName := forStatement.Element.Value
+	localEnv := object.NewEnclosedEnvironment(env)
+	array := iterable.Iter().Elements
+	for _, item := range array {
+		localEnv.Set(elementName, item)
+		result := Eval(forStatement.Body, localEnv)
+		if isError(result) {
+			return result
+		} else if result != nil && result.Type() == object.RETURN_OBJ {
+			return result
+		}
+	}
+	return nil
+}
+
+// Provision a local environment and start an infinite loop
+// Evaluate the condition
+// If condition evaluated to an error, then return it immediately
+// If condition returned true, then execute body
+// Return error immediately if body evaluates to error or returnValue
+// If condition returned false, then break from loop
+func evalWhileStatement(whileStatement *ast.WhileStatement, env *object.Environment) object.Object {
+	localEnv := object.NewEnclosedEnvironment(env)
+	for {
+		condition := Eval(whileStatement.Condition, localEnv)
+		if isError(condition) {
+			return condition
+		}
+		if isTrue(condition) {
+			result := Eval(whileStatement.Body, localEnv)
+			if isError(result) {
+				return result
+			} else if result != nil && result.Type() == object.RETURN_OBJ {
+				return result
+			}
+		} else {
+			break
+		}
+	}
+	return nil
+}
+
+// Provision a local environment
+// Evaluate result of try block
+// If it resulted in an error, then create a string with error message
+// Set error string as value of caught error variable in localEnv and reset the string value
+// Evaluate the catch block and update result
+// If catch evaluated to error (Unhandled), set the message in our error string
+// Otherwise, if finally block was there, then evaluate the result
+// If that too returned error (Unhandled), set the message in our error string
+// If there is any unhandled error, create and return the error
+// If any value is returned from the block, return it. Else return nil
+func evalTryStatement(tryStatement *ast.TryStatement, env *object.Environment) object.Object {
+	localEnv := object.NewEnclosedEnvironment(env)
+	result := Eval(tryStatement.Try, localEnv)
+	err := &object.String{Value: ""}
+	if isError(result) {
+		err.Value = result.(*object.Error).Message
+		localEnv.Set(tryStatement.Error.Value, err)
+		result = Eval(tryStatement.Catch, localEnv)
+		err.Value = ""
+	}
+	if isError(result) {
+		err.Value = "Unhandled error in catch. " + result.(*object.Error).Message
+	}
+	if tryStatement.Finally != nil {
+		result = Eval(tryStatement.Finally, localEnv)
+	}
+	if isError(result) {
+		err.Value = "Unhandled error in finally. " + result.(*object.Error).Message
+	}
+	if err.Value != "" {
+		return newError(err.Value)
+	}
+	if result != nil && result.Type() == object.RETURN_OBJ {
+		return result
+	}
+	return nil
+}
+
 // Evaluates an prefix expression
 // If right operand was evaluated to error object, then return it directly
 // If the operator is a valid prefix operator, then perform that operation on the right operand and return result
@@ -176,44 +269,6 @@ func evalInfixExpression(infixExpression *ast.InfixExpression, env *object.Envir
 	return evalInfixOperation(leftOperand, operator, rightOperand)
 }
 
-// Provision a local environment
-// Evaluate result of try block
-// If it resulted in an error, then create a string with error message
-// Set error string as value of caught error variable in localEnv and reset the string value
-// Evaluate the catch block and update result
-// If catch evaluated to error (Unhandled), set the message in our error string
-// Otherwise, if finally block was there, then evaluate the result
-// If that too returned error (Unhandled), set the message in our error string
-// If there is any unhandled error, create and return the error
-// If any value is returned from the block, return it. Else return nil
-func evalTryExpression(tryExpression *ast.TryExpression, env *object.Environment) object.Object {
-	localEnv := object.NewEnclosedEnvironment(env)
-	result := Eval(tryExpression.Try, localEnv)
-	err := &object.String{Value: ""}
-	if isError(result) {
-		err.Value = result.(*object.Error).Message
-		localEnv.Set(tryExpression.Error.Value, err)
-		result = Eval(tryExpression.Catch, localEnv)
-		err.Value = ""
-	}
-	if isError(result) {
-		err.Value = "Unhandled error in catch. " + result.(*object.Error).Message
-	}
-	if tryExpression.Finally != nil {
-		result = Eval(tryExpression.Finally, localEnv)
-	}
-	if isError(result) {
-		err.Value = "Unhandled error in finally. " + result.(*object.Error).Message
-	}
-	if err.Value != "" {
-		return newError(err.Value)
-	}
-	if result != nil && result.Type() == object.RETURN_OBJ {
-		return result
-	}
-	return nil
-}
-
 // Evaluated assignment expression
 // Return error if variable is not defined before
 // Else, evaluate the value
@@ -249,61 +304,6 @@ func evalIfExpression(ifExpression *ast.IfExpression, env *object.Environment) o
 	} else {
 		return NULL
 	}
-}
-
-// Evaluates a for expression
-// If object is not iterable, then return error
-// Else, provision a local environment
-// Get the elements from the iterable object
-// Repeatedly evaluate the body length(element) times
-// Return error immediately if body evaluates to error or returnValue
-// Before each iteration, set the element in the local environment
-func evalForExpression(forExpression *ast.ForExpression, env *object.Environment) object.Object {
-	iterObject := Eval(forExpression.Iterator, env)
-	iterable, ok := iterObject.(object.Iterable)
-	if !ok {
-		return newError("%s: is not iterable", iterObject.Type())
-	}
-	elementName := forExpression.Element.Value
-	localEnv := object.NewEnclosedEnvironment(env)
-	array := iterable.Iter().Elements
-	for _, item := range array {
-		localEnv.Set(elementName, item)
-		result := Eval(forExpression.Body, localEnv)
-		if isError(result) {
-			return result
-		} else if result != nil && result.Type() == object.RETURN_OBJ {
-			return result
-		}
-	}
-	return nil
-}
-
-// Provision a local environment and start an infinite loop
-// Evaluate the condition
-// If condition evaluated to an error, then return it immediately
-// If condition returned true, then execute body
-// Return error immediately if body evaluates to error or returnValue
-// If condition returned false, then break from loop
-func evalWhileExpression(whileExpression *ast.WhileExpression, env *object.Environment) object.Object {
-	localEnv := object.NewEnclosedEnvironment(env)
-	for {
-		condition := Eval(whileExpression.Condition, localEnv)
-		if isError(condition) {
-			return condition
-		}
-		if isTrue(condition) {
-			result := Eval(whileExpression.Body, localEnv)
-			if isError(result) {
-				return result
-			} else if result != nil && result.Type() == object.RETURN_OBJ {
-				return result
-			}
-		} else {
-			break
-		}
-	}
-	return nil
 }
 
 // If left operand and index evaluates to error, then return that error immediately

@@ -113,6 +113,70 @@ func (blockStatement *BlockStatement) String() string {
 	return str.String()
 }
 
+type ForStatement struct {
+	Token    token.Token
+	Element  *Identifier
+	Iterator Expression
+	Body     *BlockStatement
+}
+
+func (forStatement *ForStatement) statementNode()       {}
+func (forStatement *ForStatement) TokenLiteral() string { return forStatement.Token.Literal }
+func (forStatement *ForStatement) String() string {
+	var str strings.Builder
+	str.WriteString(forStatement.TokenLiteral())
+	str.WriteString("(")
+	str.WriteString(forStatement.Element.String())
+	str.WriteString(" in ")
+	str.WriteString(forStatement.Iterator.String())
+	str.WriteString(") ")
+	str.WriteString(forStatement.Body.String())
+	return str.String()
+}
+
+type WhileStatement struct {
+	Token     token.Token
+	Condition Expression
+	Body      *BlockStatement
+}
+
+func (whileStatement *WhileStatement) statementNode()       {}
+func (whileStatement *WhileStatement) TokenLiteral() string { return whileStatement.Token.Literal }
+func (whileStatement *WhileStatement) String() string {
+	var str strings.Builder
+	str.WriteString(whileStatement.TokenLiteral())
+	str.WriteString("(")
+	str.WriteString(whileStatement.Condition.String())
+	str.WriteString(") ")
+	str.WriteString(whileStatement.Body.String())
+	return str.String()
+}
+
+type TryStatement struct {
+	Token   token.Token
+	Try     *BlockStatement
+	Catch   *BlockStatement
+	Error   *Identifier
+	Finally *BlockStatement
+}
+
+func (tryStatement *TryStatement) statementNode()       {}
+func (tryStatement *TryStatement) TokenLiteral() string { return tryStatement.Token.Literal }
+func (tryStatement *TryStatement) String() string {
+	var str strings.Builder
+	str.WriteString("try ")
+	str.WriteString(tryStatement.Try.String())
+	str.WriteString(" catch(")
+	str.WriteString(tryStatement.Error.String())
+	str.WriteString(") ")
+	str.WriteString(tryStatement.Catch.String())
+	if tryStatement.Finally != nil {
+		str.WriteString(" finally ")
+		str.WriteString(tryStatement.Finally.String())
+	}
+	return str.String()
+}
+
 type PrefixExpression struct {
 	Token    token.Token
 	Operator string
@@ -146,31 +210,6 @@ func (infixExpression *InfixExpression) String() string {
 	str.WriteString(infixExpression.Operator)
 	str.WriteString(" ")
 	str.WriteString(infixExpression.Right.String())
-	return str.String()
-}
-
-type TryExpression struct {
-	Token   token.Token
-	Try     *BlockStatement
-	Catch   *BlockStatement
-	Error   *Identifier
-	Finally *BlockStatement
-}
-
-func (tryExpression *TryExpression) expressionNode()      {}
-func (tryExpression *TryExpression) TokenLiteral() string { return tryExpression.Token.Literal }
-func (tryExpression *TryExpression) String() string {
-	var str strings.Builder
-	str.WriteString("try ")
-	str.WriteString(tryExpression.Try.String())
-	str.WriteString(" catch(")
-	str.WriteString(tryExpression.Error.String())
-	str.WriteString(") ")
-	str.WriteString(tryExpression.Catch.String())
-	if tryExpression.Finally != nil {
-		str.WriteString(" finally ")
-		str.WriteString(tryExpression.Finally.String())
-	}
 	return str.String()
 }
 
@@ -229,45 +268,6 @@ func (ifExpression *IfExpression) String() string {
 		str.WriteString(" else ")
 		str.WriteString(ifExpression.Alternate.String())
 	}
-	return str.String()
-}
-
-type ForExpression struct {
-	Token    token.Token
-	Element  *Identifier
-	Iterator Expression
-	Body     *BlockStatement
-}
-
-func (forExpression *ForExpression) expressionNode()      {}
-func (forExpression *ForExpression) TokenLiteral() string { return forExpression.Token.Literal }
-func (forExpression *ForExpression) String() string {
-	var str strings.Builder
-	str.WriteString(forExpression.TokenLiteral())
-	str.WriteString("(")
-	str.WriteString(forExpression.Element.String())
-	str.WriteString(" in ")
-	str.WriteString(forExpression.Iterator.String())
-	str.WriteString(") ")
-	str.WriteString(forExpression.Body.String())
-	return str.String()
-}
-
-type WhileExpression struct {
-	Token     token.Token
-	Condition Expression
-	Body      *BlockStatement
-}
-
-func (whileExpression *WhileExpression) expressionNode()      {}
-func (whileExpression *WhileExpression) TokenLiteral() string { return whileExpression.Token.Literal }
-func (whileExpression *WhileExpression) String() string {
-	var str strings.Builder
-	str.WriteString(whileExpression.TokenLiteral())
-	str.WriteString("(")
-	str.WriteString(whileExpression.Condition.String())
-	str.WriteString(") ")
-	str.WriteString(whileExpression.Body.String())
 	return str.String()
 }
 

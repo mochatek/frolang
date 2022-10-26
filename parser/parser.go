@@ -80,9 +80,6 @@ func New(lexer *lexer.Lexer) *Parser {
 	parser.registerPrefixParser(token.BANG, parser.parsePrefixExpression)
 	parser.registerPrefixParser(token.L_PAREN, parser.parseGroupedExpression)
 	parser.registerPrefixParser(token.IF, parser.parseIfExpression)
-	parser.registerPrefixParser(token.FOR, parser.parseForExpression)
-	parser.registerPrefixParser(token.WHILE, parser.parseWhileExpression)
-	parser.registerPrefixParser(token.TRY, parser.parseTryExpression)
 
 	parser.registerInfixParser(token.PLUS, parser.parseInfixExpression)
 	parser.registerInfixParser(token.MINUS, parser.parseInfixExpression)
@@ -197,6 +194,12 @@ func (parser *Parser) parseStatement() ast.Statement {
 		return parser.parseLetStatement()
 	case token.RETURN:
 		return parser.parseReturnStatement()
+	case token.FOR:
+		return parser.parseForStatement()
+	case token.WHILE:
+		return parser.parseWhileStatement()
+	case token.TRY:
+		return parser.parseTryStatement()
 	default:
 		return parser.parseExpressionStatement()
 	}
@@ -273,6 +276,96 @@ func (parser *Parser) parseBlockStatement() *ast.BlockStatement {
 	} else {
 		return blockStatement
 	}
+}
+
+// FOR ELEMENT IN ITERABLE { BODY }
+// Parentheses around loop expression is optional
+// Example: for num in [1, 2, 3] { print(num) }
+func (parser *Parser) parseForStatement() *ast.ForStatement {
+	forStatement := &ast.ForStatement{Token: parser.curToken}
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
+	}
+	if !parser.expectPeek(token.IDENTIFIER) {
+		return nil
+	}
+	forStatement.Element = &ast.Identifier{Token: parser.curToken, Value: parser.curToken.Literal}
+	if !parser.expectPeek(token.IN) {
+		return nil
+	}
+	parser.scanToken()
+	forStatement.Iterator = parser.parseExpression(LOWEST)
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
+		return nil
+	}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	forStatement.Body = parser.parseBlockStatement()
+	return forStatement
+}
+
+// WHILE CONDITION { BODY }
+// Parentheses around condition is optional
+// Example: while num < 5 { print(num); num = num + 1 }
+func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
+	whileStatement := &ast.WhileStatement{Token: parser.curToken}
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
+	}
+	parser.scanToken()
+	whileStatement.Condition = parser.parseExpression(LOWEST)
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
+		return nil
+	}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	whileStatement.Body = parser.parseBlockStatement()
+	return whileStatement
+}
+
+// TRY { BLOCK } CATCH ERROR { BLOCK } <FINALLY { BLOCK }>
+// Parentheses around caught error is optional
+// Finally part is also optional
+// Example: try { let a = 3/0; } catch error { print(error) }
+func (parser *Parser) parseTryStatement() *ast.TryStatement {
+	tryStatement := &ast.TryStatement{Token: parser.curToken}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	tryStatement.Try = parser.parseBlockStatement()
+	if !parser.expectPeek(token.CATCH) {
+		return nil
+	}
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
+	}
+	if !parser.expectPeek(token.IDENTIFIER) {
+		return nil
+	}
+	tryStatement.Error = &ast.Identifier{Token: parser.curToken, Value: parser.curToken.Literal}
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
+		return nil
+	}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	tryStatement.Catch = parser.parseBlockStatement()
+	if parser.peekTokenIs(token.FINALLY) {
+		parser.scanToken()
+		if !parser.expectPeek(token.L_BRACE) {
+			return nil
+		}
+		tryStatement.Finally = parser.parseBlockStatement()
+	}
+	return tryStatement
 }
 
 // EXPRESSION
@@ -367,96 +460,6 @@ func (parser *Parser) parseIfExpression() ast.Expression {
 		ifExpression.Alternate = parser.parseBlockStatement()
 	}
 	return ifExpression
-}
-
-// FOR ELEMENT IN ITERABLE { BODY }
-// Parentheses around loop expression is optional
-// Example: for num in [1, 2, 3] { print(num) }
-func (parser *Parser) parseForExpression() ast.Expression {
-	forExpression := &ast.ForExpression{Token: parser.curToken}
-	hashParentheses := false
-	if parser.peekTokenIs(token.L_PAREN) {
-		hashParentheses = true
-		parser.scanToken()
-	}
-	if !parser.expectPeek(token.IDENTIFIER) {
-		return nil
-	}
-	forExpression.Element = &ast.Identifier{Token: parser.curToken, Value: parser.curToken.Literal}
-	if !parser.expectPeek(token.IN) {
-		return nil
-	}
-	parser.scanToken()
-	forExpression.Iterator = parser.parseExpression(LOWEST)
-	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
-		return nil
-	}
-	if !parser.expectPeek(token.L_BRACE) {
-		return nil
-	}
-	forExpression.Body = parser.parseBlockStatement()
-	return forExpression
-}
-
-// WHILE CONDITION { BODY }
-// Parentheses around condition is optional
-// Example: while num < 5 { print(num); num = num + 1 }
-func (parser *Parser) parseWhileExpression() ast.Expression {
-	whileExpression := &ast.WhileExpression{Token: parser.curToken}
-	hashParentheses := false
-	if parser.peekTokenIs(token.L_PAREN) {
-		hashParentheses = true
-		parser.scanToken()
-	}
-	parser.scanToken()
-	whileExpression.Condition = parser.parseExpression(LOWEST)
-	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
-		return nil
-	}
-	if !parser.expectPeek(token.L_BRACE) {
-		return nil
-	}
-	whileExpression.Body = parser.parseBlockStatement()
-	return whileExpression
-}
-
-// TRY { BLOCK } CATCH ERROR { BLOCK } <FINALLY { BLOCK }>
-// Parentheses around caught error is optional
-// Finally part is also optional
-// Example: try { let a = 3/0; } catch error { print(error) }
-func (parser *Parser) parseTryExpression() ast.Expression {
-	tryExpression := &ast.TryExpression{Token: parser.curToken}
-	if !parser.expectPeek(token.L_BRACE) {
-		return nil
-	}
-	tryExpression.Try = parser.parseBlockStatement()
-	if !parser.expectPeek(token.CATCH) {
-		return nil
-	}
-	hashParentheses := false
-	if parser.peekTokenIs(token.L_PAREN) {
-		hashParentheses = true
-		parser.scanToken()
-	}
-	if !parser.expectPeek(token.IDENTIFIER) {
-		return nil
-	}
-	tryExpression.Error = &ast.Identifier{Token: parser.curToken, Value: parser.curToken.Literal}
-	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
-		return nil
-	}
-	if !parser.expectPeek(token.L_BRACE) {
-		return nil
-	}
-	tryExpression.Catch = parser.parseBlockStatement()
-	if parser.peekTokenIs(token.FINALLY) {
-		parser.scanToken()
-		if !parser.expectPeek(token.L_BRACE) {
-			return nil
-		}
-		tryExpression.Finally = parser.parseBlockStatement()
-	}
-	return tryExpression
 }
 
 // IDENTIFIER

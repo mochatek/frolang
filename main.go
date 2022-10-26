@@ -50,9 +50,13 @@ func main() {
 		env := object.NewEnvironment()
 		result := evaluator.Eval(program, env)
 
-		// Show errors if any
+		// Show errors/result if any
 		if result != nil {
-			fmt.Printf("%s%s%s\n", RED, result.Inspect(), RESET)
+			if result.Type() == object.ERROR_OBJ {
+				fmt.Printf("%s%s%s\n", RED, result.Inspect(), RESET)
+			} else {
+				fmt.Printf("%s%s%s\n", GREEN, result.Inspect(), RESET)
+			}
 		}
 	}
 }
