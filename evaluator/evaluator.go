@@ -185,7 +185,7 @@ func evalInfixExpression(infixExpression *ast.InfixExpression, env *object.Envir
 // Otherwise, if finally block was there, then evaluate the result
 // If that too returned error (Unhandled), set the message in our error string
 // If there is any unhandled error, create and return the error
-// Expression should return a value. So return null if result is nil else return result
+// If any value is returned from the block, return it. Else return nil
 func evalTryExpression(tryExpression *ast.TryExpression, env *object.Environment) object.Object {
 	localEnv := object.NewEnclosedEnvironment(env)
 	result := Eval(tryExpression.Try, localEnv)
@@ -208,10 +208,10 @@ func evalTryExpression(tryExpression *ast.TryExpression, env *object.Environment
 	if err.Value != "" {
 		return newError(err.Value)
 	}
-	if result == nil {
-		return NULL
+	if result != nil && result.Type() == object.RETURN_OBJ {
+		return result
 	}
-	return result
+	return nil
 }
 
 // Evaluated assignment expression

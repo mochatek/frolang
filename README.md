@@ -47,6 +47,7 @@ You can follow any of these methods to install and use FroLang:
 - [Loops](#loops)
     - [For in Loop](#for-in-loop)
     - [While Loop](#while-loop)
+- [Error Handling](#error-handling)
 - [Builtin Methods](#builtin-methods)
 - [To-Do](#to-do)
 
@@ -194,8 +195,8 @@ Following operators are supported by FroLang:
 | Operator | Description | Operands | Example |
 |-|-|-|-|
 |__!__|Not - negates the truth value|any|`let res = !true;`|
-|__&__|And - evaluate to true if both operands are true|any|`let res = true & true;`|
-|__\|__|Or - evaluate to true if any operand is true|any|`let res = true \| false;`|
+|__&__|And - evaluates the first falsy value. If both are truthy/falsy, it will evaluate the right operand|any|`let res = true & true;`|
+|__\|__|Or - evaluates the first truthy value. If both are truthy/falsy, it will evaluate the right operand|any|`let res = true \| false;`|
 
 ### Presence operators
 | Operator | Description | Operands | Example |
@@ -272,6 +273,27 @@ while count < 3 {
 }
 ```
 
+## Error Handling
+- FroLang provides error handling mechanism to catch runtime errors using try-catch-finally block
+- The `try` statement defines a code block to run (to try)
+- The `catch` statement defines a code block to handle any error from try block
+- The `finally` statement defines a code block to run regardless of the result
+- Catch block is mandatory whereas finally is optional
+- Parentheses around the caught error in catch is optional
+
+**Example**
+
+```js
+try {
+    print("Trying to divide 10 by 0")
+    let quot = 10/0;
+} catch error {
+    print(error)
+} finally {
+    print("Done")
+}
+```
+
 ## Builtin Methods
 |Method|Description|Example|
 |-|-|-|
@@ -301,7 +323,6 @@ while count < 3 {
 - [ ] StdLib: `datetime, fileIO`
 - [ ] Help
 - [ ] Example programs
-- [ ] Docker image
 - [ ] Compiler
 
 # Reference
