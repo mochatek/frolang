@@ -296,7 +296,6 @@ while count < 3 {
 
 ## To-Do
 - [ ] Controls statements: `break, continue`
-- [ ] Error handling: `try - catch`
 - [ ] Environment variables
 - [ ] Modules
 - [ ] StdLib: `datetime, fileIO`

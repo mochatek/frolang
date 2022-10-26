@@ -82,6 +82,7 @@ func New(lexer *lexer.Lexer) *Parser {
 	parser.registerPrefixParser(token.IF, parser.parseIfExpression)
 	parser.registerPrefixParser(token.FOR, parser.parseForExpression)
 	parser.registerPrefixParser(token.WHILE, parser.parseWhileExpression)
+	parser.registerPrefixParser(token.TRY, parser.parseTryExpression)
 
 	parser.registerInfixParser(token.PLUS, parser.parseInfixExpression)
 	parser.registerInfixParser(token.MINUS, parser.parseInfixExpression)
@@ -417,6 +418,45 @@ func (parser *Parser) parseWhileExpression() ast.Expression {
 	}
 	whileExpression.Body = parser.parseBlockStatement()
 	return whileExpression
+}
+
+// TRY { BLOCK } CATCH ERROR { BLOCK } <FINALLY { BLOCK }>
+// Parentheses around caught error is optional
+// Finally part is also optional
+// Example: try { let a = 3/0; } catch error { print(error) }
+func (parser *Parser) parseTryExpression() ast.Expression {
+	tryExpression := &ast.TryExpression{Token: parser.curToken}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	tryExpression.Try = parser.parseBlockStatement()
+	if !parser.expectPeek(token.CATCH) {
+		return nil
+	}
+	hashParentheses := false
+	if parser.peekTokenIs(token.L_PAREN) {
+		hashParentheses = true
+		parser.scanToken()
+	}
+	if !parser.expectPeek(token.IDENTIFIER) {
+		return nil
+	}
+	tryExpression.Error = &ast.Identifier{Token: parser.curToken, Value: parser.curToken.Literal}
+	if hashParentheses && !parser.expectPeek(token.R_PAREN) {
+		return nil
+	}
+	if !parser.expectPeek(token.L_BRACE) {
+		return nil
+	}
+	tryExpression.Catch = parser.parseBlockStatement()
+	if parser.peekTokenIs(token.FINALLY) {
+		parser.scanToken()
+		if !parser.expectPeek(token.L_BRACE) {
+			return nil
+		}
+		tryExpression.Finally = parser.parseBlockStatement()
+	}
+	return tryExpression
 }
 
 // IDENTIFIER

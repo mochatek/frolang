@@ -46,6 +46,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
 		return evalInfixExpression(node, env)
+	case *ast.TryExpression:
+		return evalTryExpression(node, env)
 	case *ast.AssignExpression:
 		return evalAssignExpression(node, env)
 	case *ast.IfExpression:
@@ -172,6 +174,44 @@ func evalInfixExpression(infixExpression *ast.InfixExpression, env *object.Envir
 	}
 	operator := infixExpression.Operator
 	return evalInfixOperation(leftOperand, operator, rightOperand)
+}
+
+// Provision a local environment
+// Evaluate result of try block
+// If it resulted in an error, then create a string with error message
+// Set error string as value of caught error variable in localEnv and reset the string value
+// Evaluate the catch block and update result
+// If catch evaluated to error (Unhandled), set the message in our error string
+// Otherwise, if finally block was there, then evaluate the result
+// If that too returned error (Unhandled), set the message in our error string
+// If there is any unhandled error, create and return the error
+// Expression should return a value. So return null if result is nil else return result
+func evalTryExpression(tryExpression *ast.TryExpression, env *object.Environment) object.Object {
+	localEnv := object.NewEnclosedEnvironment(env)
+	result := Eval(tryExpression.Try, localEnv)
+	err := &object.String{Value: ""}
+	if isError(result) {
+		err.Value = result.(*object.Error).Message
+		localEnv.Set(tryExpression.Error.Value, err)
+		result = Eval(tryExpression.Catch, localEnv)
+		err.Value = ""
+	}
+	if isError(result) {
+		err.Value = "Unhandled error in catch. " + result.(*object.Error).Message
+	}
+	if tryExpression.Finally != nil {
+		result = Eval(tryExpression.Finally, localEnv)
+	}
+	if isError(result) {
+		err.Value = "Unhandled error in finally. " + result.(*object.Error).Message
+	}
+	if err.Value != "" {
+		return newError(err.Value)
+	}
+	if result == nil {
+		return NULL
+	}
+	return result
 }
 
 // Evaluated assignment expression
@@ -480,6 +520,9 @@ func evalIntOperation(leftOperand *object.Integer, operator string, rightOperand
 	case token.ASTERISK:
 		return &object.Integer{Value: leftValue * rightValue}
 	case token.SLASH:
+		if rightValue == 0 {
+			return newError("Division by 0 is not allowed")
+		}
 		return &object.Integer{Value: leftValue / rightValue}
 	case token.EQ:
 		return nativeToBooleanObject(leftValue == rightValue)
@@ -511,6 +554,9 @@ func evalFloatOperation(leftOperand *object.Float, operator string, rightOperand
 	case token.ASTERISK:
 		return &object.Float{Value: leftValue * rightValue}
 	case token.SLASH:
+		if rightValue == 0 {
+			return newError("Division by 0 is not allowed")
+		}
 		return &object.Float{Value: leftValue / rightValue}
 	case token.EQ:
 		return nativeToBooleanObject(leftValue == rightValue)
@@ -542,6 +588,9 @@ func evalIntFloatOperation(leftOperand *object.Integer, operator string, rightOp
 	case token.ASTERISK:
 		return &object.Float{Value: leftValue * rightValue}
 	case token.SLASH:
+		if rightValue == 0 {
+			return newError("Division by 0 is not allowed")
+		}
 		return &object.Float{Value: leftValue / rightValue}
 	case token.EQ:
 		return nativeToBooleanObject(leftValue == rightValue)
@@ -573,6 +622,9 @@ func evalFloatIntOperation(leftOperand *object.Float, operator string, rightOper
 	case token.ASTERISK:
 		return &object.Float{Value: leftValue * rightValue}
 	case token.SLASH:
+		if rightValue == 0 {
+			return newError("Division by 0 is not allowed")
+		}
 		return &object.Float{Value: leftValue / rightValue}
 	case token.EQ:
 		return nativeToBooleanObject(leftValue == rightValue)

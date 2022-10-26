@@ -149,6 +149,31 @@ func (infixExpression *InfixExpression) String() string {
 	return str.String()
 }
 
+type TryExpression struct {
+	Token   token.Token
+	Try     *BlockStatement
+	Catch   *BlockStatement
+	Error   *Identifier
+	Finally *BlockStatement
+}
+
+func (tryExpression *TryExpression) expressionNode()      {}
+func (tryExpression *TryExpression) TokenLiteral() string { return tryExpression.Token.Literal }
+func (tryExpression *TryExpression) String() string {
+	var str strings.Builder
+	str.WriteString("try ")
+	str.WriteString(tryExpression.Try.String())
+	str.WriteString(" catch(")
+	str.WriteString(tryExpression.Error.String())
+	str.WriteString(") ")
+	str.WriteString(tryExpression.Catch.String())
+	if tryExpression.Finally != nil {
+		str.WriteString(" finally ")
+		str.WriteString(tryExpression.Finally.String())
+	}
+	return str.String()
+}
+
 type AssignExpression struct {
 	Token    token.Token
 	Variable *Identifier
