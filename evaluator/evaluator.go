@@ -452,9 +452,9 @@ func unwrapReturnValue(obj object.Object) object.Object {
 func evalInfixOperation(leftOperand object.Object, operator string, rightOperand object.Object) object.Object {
 	switch {
 	case operator == token.AND:
-		return nativeToBooleanObject(isTrue(leftOperand) && isTrue(rightOperand))
+		return evalAndExpression(leftOperand, rightOperand)
 	case operator == token.OR:
-		return nativeToBooleanObject(isTrue(leftOperand) || isTrue(rightOperand))
+		return evalOrExpression(leftOperand, rightOperand)
 	case operator == token.IN:
 		return evalInExpression(leftOperand, rightOperand)
 	case (leftOperand.Type() == object.INTEGER_OBJ || leftOperand.Type() == object.FLOAT_OBJ) && (rightOperand.Type() == object.INTEGER_OBJ || rightOperand.Type() == object.FLOAT_OBJ):
@@ -659,6 +659,28 @@ func evalStringOperation(leftOperand object.Object, operator string, rightOperan
 	default:
 		return newError("Unknown operator: %s %s %s", leftOperand.Type(), operator, rightOperand.Type())
 	}
+}
+
+// Evaluate AND(&&) operation on operands and return the result
+func evalAndExpression(leftOperand object.Object, rightOperand object.Object) object.Object {
+	if isTrue(leftOperand) == isTrue(rightOperand) {
+		return rightOperand
+	}
+	if !isTrue(leftOperand) {
+		return leftOperand
+	}
+	return rightOperand
+}
+
+// Evaluate OR(&&) operation on operands and return the result
+func evalOrExpression(leftOperand object.Object, rightOperand object.Object) object.Object {
+	if isTrue(leftOperand) == isTrue(rightOperand) {
+		return rightOperand
+	}
+	if isTrue(leftOperand) {
+		return leftOperand
+	}
+	return rightOperand
 }
 
 // If rightOperand is not iterable, then return invalid operand error
