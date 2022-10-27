@@ -66,6 +66,8 @@ const (
 	ELSE     = "ELSE"
 	FOR      = "FOR"
 	WHILE    = "WHILE"
+	BREAK    = "break"
+	CONTINUE = "continue"
 	FUNCTION = "FUNCTION"
 	RETURN   = "RETURN"
 	IN       = "in"
@@ -81,19 +83,21 @@ const (
 )
 
 var Keywords = map[string]TokenType{
-	"let":     LET,
-	"true":    TRUE,
-	"false":   FALSE,
-	"in":      IN,
-	"if":      IF,
-	"else":    ELSE,
-	"for":     FOR,
-	"while":   WHILE,
-	"fn":      FUNCTION,
-	"return":  RETURN,
-	"try":     TRY,
-	"catch":   CATCH,
-	"finally": FINALLY,
+	"let":      LET,
+	"true":     TRUE,
+	"false":    FALSE,
+	"in":       IN,
+	"if":       IF,
+	"else":     ELSE,
+	"for":      FOR,
+	"while":    WHILE,
+	"break":    BREAK,
+	"continue": CONTINUE,
+	"fn":       FUNCTION,
+	"return":   RETURN,
+	"try":      TRY,
+	"catch":    CATCH,
+	"finally":  FINALLY,
 }
 
 // Helper function to lookup a word in keyword dictionary

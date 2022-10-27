@@ -152,6 +152,24 @@ func (whileStatement *WhileStatement) String() string {
 	return str.String()
 }
 
+type BreakStatement struct {
+	Token token.Token
+}
+
+func (breakStatement *BreakStatement) statementNode()       {}
+func (breakStatement *BreakStatement) TokenLiteral() string { return breakStatement.Token.Literal }
+func (breakStatement *BreakStatement) String() string       { return "break" }
+
+type ContinueStatement struct {
+	Token token.Token
+}
+
+func (continueStatement *ContinueStatement) statementNode() {}
+func (continueStatement *ContinueStatement) TokenLiteral() string {
+	return continueStatement.Token.Literal
+}
+func (continueStatement *ContinueStatement) String() string { return "continue" }
+
 type TryStatement struct {
 	Token   token.Token
 	Try     *BlockStatement

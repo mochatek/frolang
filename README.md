@@ -1,5 +1,5 @@
-# 🐸 FroLang v0.0.1
-FroLang is a toy language created for the sole purpose of learning how to build an interpreter and to sharpen my Go skills.
+# 🐸 FroLang v0.1.0
+FroLang is an interpreted toy language created for the sole purpose of learning how to build an interpreter and to sharpen my Go skills.
 
 <p align="center">
   <img src="https://github.com/mochatek/frolang/blob/master/logo.png" alt="Logo" />
@@ -17,13 +17,25 @@ FroLang interpreter uses an approach called _Tree-Walking_, which parses the sou
 ## Installation and Usage
 You can follow any of these methods to install and use FroLang:
 
-1. Running from this project:
+1. Running from source code:
     - Clone this repo
     - Install [Go](https://go.dev/dl/)
     - Run `go run main.go` for the _REPL_
     - Run `go run main.go fro_script_path` to run a valid _.fro_ script
-2. Using _go get_ utility
-3. Download the compiled binary from [Releases](https://github.com/mochatek/frolang/releases)
+2. Install using _go get_ utility: `go get github.com/mochatek/frolang`
+3. Docker
+    - For REPL: `docker run -it frolang`
+    - To build image for your program:
+        ```dockerfile
+        FROM frolang
+
+        WORKDIR /app/
+
+        COPY main.fro /app/
+
+        CMD ["main.fro"]
+        ```
+4. Download the compiled binary from [Releases](https://github.com/mochatek/frolang/releases)
 
 # Features
 - [Variables](#variables)
@@ -47,6 +59,7 @@ You can follow any of these methods to install and use FroLang:
 - [Loops](#loops)
     - [For in Loop](#for-in-loop)
     - [While Loop](#while-loop)
+- [Jump Statements](#jump-statements)
 - [Error Handling](#error-handling)
 - [Builtin Methods](#builtin-methods)
 - [To-Do](#to-do)
@@ -55,6 +68,7 @@ You can follow any of these methods to install and use FroLang:
 - Declare variables using `let` keyword
 - Variable name should only contain letters and underscore
 - Variable names are case sensitive
+- Variables in FroLang are __block scoped__
 
 **Example**
 ```js
@@ -273,6 +287,30 @@ while count < 3 {
 }
 ```
 
+## Jump Statements
+- Jump statements transfer control of the program to another part of the program
+- FroLang contains 2 jump statements: `break` and `continue` which serve the same purpose as in other languages
+- Jump statements in FroLang can only be used inside loop body
+
+**Example**
+```js
+let count = 0;
+print("Counting from 1 to 5");
+
+ while count <= 5 {
+    count = count + 1;
+    if count == 2 {
+        print("Skipping 2");
+        continue;
+    }
+    if count == 4 {
+        print("Stopping at 4");
+        break;
+    }
+    print(count);
+}
+```
+
 ## Error Handling
 - FroLang provides error handling mechanism to catch runtime errors using try-catch-finally block
 - The `try` statement defines a code block to run (to try)
@@ -317,7 +355,6 @@ try {
 |_delete_(hash, key)_|Returns a new hash with the key-value pair removed for the supplied key|`delete({1: "one", "two": 2}, 1)`|
 
 ## To-Do
-- [ ] Controls statements: `break, continue`
 - [ ] Environment variables
 - [ ] Modules
 - [ ] StdLib: `datetime, fileIO`

@@ -12,7 +12,7 @@ import (
 	"github.com/mochatek/frolang/parser"
 )
 
-const HEADER = "🐸 FroLang v0.0.1 REPL"
+const HEADER = "🐸 FroLang v0.1.0 REPL"
 const PROMPT = ">> "
 
 const RESET = "\033[0m"

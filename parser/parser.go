@@ -184,7 +184,7 @@ func (parser *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
-// STATEMENT => LET / RETURN / EXPRESSION
+// STATEMENT => COMMENT / LET / RETURN / FOR / WHILE / BREAK / CONTINUE / EXPRESSION
 // Applies parse function to the statement based on current token's type
 func (parser *Parser) parseStatement() ast.Statement {
 	switch parser.curToken.Type {
@@ -198,6 +198,10 @@ func (parser *Parser) parseStatement() ast.Statement {
 		return parser.parseForStatement()
 	case token.WHILE:
 		return parser.parseWhileStatement()
+	case token.BREAK:
+		return parser.parseBreakStatement()
+	case token.CONTINUE:
+		return parser.parseContinueStatement()
 	case token.TRY:
 		return parser.parseTryStatement()
 	default:
@@ -327,6 +331,26 @@ func (parser *Parser) parseWhileStatement() *ast.WhileStatement {
 	}
 	whileStatement.Body = parser.parseBlockStatement()
 	return whileStatement
+}
+
+// BREAK
+// Example: break;
+func (parser *Parser) parseBreakStatement() *ast.BreakStatement {
+	breakStatement := &ast.BreakStatement{Token: parser.curToken}
+	if parser.peekTokenIs(token.SEMICOLON) {
+		parser.scanToken()
+	}
+	return breakStatement
+}
+
+// CONTINUE
+// Example: continue;
+func (parser *Parser) parseContinueStatement() *ast.ContinueStatement {
+	continueStatement := &ast.ContinueStatement{Token: parser.curToken}
+	if parser.peekTokenIs(token.SEMICOLON) {
+		parser.scanToken()
+	}
+	return continueStatement
 }
 
 // TRY { BLOCK } CATCH ERROR { BLOCK } <FINALLY { BLOCK }>

@@ -44,6 +44,10 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalForStatement(node, env)
 	case *ast.WhileStatement:
 		return evalWhileStatement(node, env)
+	case *ast.BreakStatement:
+		return &object.Jump{Signal: node.TokenLiteral()}
+	case *ast.ContinueStatement:
+		return &object.Jump{Signal: node.TokenLiteral()}
 	case *ast.TryStatement:
 		return evalTryStatement(node, env)
 	case *ast.ExpressionStatement:
@@ -84,6 +88,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 // If any of the statement was return statement, then return its return value as final result
 // Similarly if we encounter an error object, return the result there itself
 // In both cases no further statements will be evaluated
+// In case of jump object, reason will be use of break/continue outside loop. So return that error
 func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 	var result object.Object
 	for _, statement := range program.Statements {
@@ -93,6 +98,8 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 			return result.Value
 		case *object.Error:
 			return result
+		case *object.Jump:
+			return newError("%s statement can only be used inside loop", result.Signal)
 		}
 	}
 	return result
@@ -124,7 +131,7 @@ func evalReturnStatement(returnStatement *ast.ReturnStatement, env *object.Envir
 // Provision a local environment for the block
 // Evaluate each statement in the block with the local environment
 // Return error immediately if any statement evaluated to error
-// Return the result immediately if we encounter return statement
+// Return the result immediately if we encounter return/jump statement
 // Otherwise return the final result as in parseProgram
 func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.Object {
 	var result object.Object
@@ -134,8 +141,13 @@ func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) obje
 		if isError(result) {
 			return result
 		}
-		if result != nil && result.Type() == object.RETURN_OBJ {
-			return result
+		if result != nil {
+			if result.Type() == object.RETURN_OBJ {
+				return result
+			}
+			if result.Type() == object.JUMP_OBJ {
+				return result
+			}
 		}
 	}
 	return result
@@ -146,7 +158,9 @@ func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) obje
 // Else, provision a local environment
 // Get the elements from the iterable object
 // Repeatedly evaluate the body length(element) times
-// Return error immediately if body evaluates to error or returnValue
+// Return error immediately if body evaluates to error
+// Return the result immediately if returnValue is evaluated
+// If jump object is evaluated, do the appropriate jump operation in loop
 // Before each iteration, set the element in the local environment
 func evalForStatement(forStatement *ast.ForStatement, env *object.Environment) object.Object {
 	iterObject := Eval(forStatement.Iterator, env)
@@ -162,8 +176,17 @@ func evalForStatement(forStatement *ast.ForStatement, env *object.Environment) o
 		result := Eval(forStatement.Body, localEnv)
 		if isError(result) {
 			return result
-		} else if result != nil && result.Type() == object.RETURN_OBJ {
-			return result
+		}
+		if result != nil {
+			if result.Type() == object.RETURN_OBJ {
+				return result
+			}
+			if result.Type() == object.JUMP_OBJ {
+				signal := result.(*object.Jump).Signal
+				if signal == token.BREAK {
+					break
+				}
+			}
 		}
 	}
 	return nil
@@ -173,7 +196,9 @@ func evalForStatement(forStatement *ast.ForStatement, env *object.Environment) o
 // Evaluate the condition
 // If condition evaluated to an error, then return it immediately
 // If condition returned true, then execute body
-// Return error immediately if body evaluates to error or returnValue
+// Return error immediately if body evaluates to error
+// Return the result immediately if returnValue is evaluated
+// If jump object is evaluated, do the appropriate jump operation in loop
 // If condition returned false, then break from loop
 func evalWhileStatement(whileStatement *ast.WhileStatement, env *object.Environment) object.Object {
 	localEnv := object.NewEnclosedEnvironment(env)
@@ -186,8 +211,17 @@ func evalWhileStatement(whileStatement *ast.WhileStatement, env *object.Environm
 			result := Eval(whileStatement.Body, localEnv)
 			if isError(result) {
 				return result
-			} else if result != nil && result.Type() == object.RETURN_OBJ {
-				return result
+			}
+			if result != nil {
+				if result.Type() == object.RETURN_OBJ {
+					return result
+				}
+				if result.Type() == object.JUMP_OBJ {
+					signal := result.(*object.Jump).Signal
+					if signal == token.BREAK {
+						break
+					}
+				}
 			}
 		} else {
 			break

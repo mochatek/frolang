@@ -20,6 +20,7 @@ const (
 	FUNCTION_OBJ = "FUNCTION"
 	ERROR_OBJ    = "ERROR"
 	BUILTIN_OBJ  = "BUILTIN"
+	JUMP_OBJ     = "JUMP"
 )
 
 type ObjectType string
@@ -193,3 +194,10 @@ func (hash *Hash) Iter() Array {
 	}
 	return array
 }
+
+type Jump struct {
+	Signal string
+}
+
+func (jump *Jump) Type() ObjectType { return JUMP_OBJ }
+func (jump *Jump) Inspect() string  { return "" }
