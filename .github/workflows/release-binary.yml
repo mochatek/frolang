@@ -5,7 +5,7 @@ name: Release FroLang Binaries to GitHub
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   goreleaser:
