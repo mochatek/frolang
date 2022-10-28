@@ -24,10 +24,10 @@ You can follow any of these methods to install and use FroLang:
     - Run `go run main.go fro_script_path` to run a valid _.fro_ script
 2. Install using _go get_ utility: `go get github.com/mochatek/frolang`
 3. Docker
-    - For REPL: `docker run -it frolang`
+    - For REPL: `docker run -it mochatek/frolang`
     - To build image for your program:
         ```dockerfile
-        FROM frolang
+        FROM mochatek/frolang
 
         WORKDIR /app/
 
@@ -36,6 +36,7 @@ You can follow any of these methods to install and use FroLang:
         CMD ["main.fro"]
         ```
 4. Download the compiled binary from [Releases](https://github.com/mochatek/frolang/releases)
+    - Add the binary to PATH if you want to use FroLang from any location
 
 # Features
 - [Variables](#variables)

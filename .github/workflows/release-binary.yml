@@ -1,0 +1,30 @@
+# This workflow will build and release the FroLang binary when a version-tagged commit is pushed
+
+name: Release FroLang Binaries to GitHub
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  release-binaries:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64]
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v3
+
+    - name: Build and release binary
+      uses: wangyoucao577/go-release-action@v1.32
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        binary_name: "FroLang"
+        asset_name: FroLang-v${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}
+        extra_files: LICENSE README.md
