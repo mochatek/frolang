@@ -1,5 +1,7 @@
 # 🐸 FroLang v0.1.0
-FroLang is an interpreted toy language created for the sole purpose of learning how to build an interpreter and to sharpen my Go skills.
+FroLang is an interpreted, interactive, dynamic typed, open-source toy programming language created for the sole purpose of learning how to build an interpreter and to sharpen my Go skills.
+
+FroLang is purely written in Go, with a syntax that is a hybrid of Python and JS. It contains all the basic features in any programming language along with a wide range of built-in methods for general use. FroLang is portable: it runs on many Unix variants, on the Mac, and on Windows 2000 and later.
 
 <p align="center">
   <img src="https://github.com/mochatek/frolang/blob/master/logo.png" alt="Logo" />
@@ -23,18 +25,7 @@ You can follow any of these methods to install and use FroLang:
     - Run `go run main.go` for the _REPL_
     - Run `go run main.go fro_script_path` to run a valid _.fro_ script
 2. Install using _go get_ utility: `go get github.com/mochatek/frolang`
-3. Docker
-    - For REPL: `docker run -it mochatek/frolang:latest`
-    - To build image for your program:
-        ```dockerfile
-        FROM mochatek/frolang:latest
-
-        WORKDIR /app/
-
-        COPY main.fro /app/
-
-        CMD ["main.fro"]
-        ```
+3. Docker: [FroLang Image](https://hub.docker.com/r/mochatek/frolang)
 4. Download the compiled binary from [Releases](https://github.com/mochatek/frolang/releases)
     - Add the binary to PATH if you want to use FroLang from any location
 
