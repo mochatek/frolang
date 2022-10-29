@@ -10,7 +10,7 @@ builds:
       - arm64
 
 archives:
-  format: binary
+  - format: binary
 
 changelog:
   skip: true
