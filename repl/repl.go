@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 
 	"github.com/mochatek/frolang/evaluator"
@@ -15,9 +16,9 @@ import (
 const HEADER = "🐸 FroLang v0.1.0 REPL"
 const PROMPT = ">> "
 
-const RESET = "\033[0m"
-const RED = "\033[31m"
-const GREEN = "\033[32m"
+var RESET = "\033[0m"
+var RED = "\033[31m"
+var GREEN = "\033[32m"
 
 // Creates the global environment
 // Enters the loop
@@ -29,6 +30,13 @@ const GREEN = "\033[32m"
 // Ask user for next input
 // Ctrl + C input will terminate the loop
 func Start(in io.Reader, out io.Writer) {
+	// Windows doesn't natively support color in cmd
+	if runtime.GOOS == "windows" {
+		RESET = ""
+		RED = ""
+		GREEN = ""
+	}
+
 	fmt.Printf("%s%s%s\n", GREEN, HEADER, RESET)
 	fmt.Println(strings.Repeat("-", len(HEADER)-2))
 

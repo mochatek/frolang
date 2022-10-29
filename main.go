@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/mochatek/frolang/evaluator"
@@ -12,11 +13,18 @@ import (
 	"github.com/mochatek/frolang/repl"
 )
 
-const RESET = "\033[0m"
-const RED = "\033[31m"
-const GREEN = "\033[32m"
+var RESET = "\033[0m"
+var RED = "\033[31m"
+var GREEN = "\033[32m"
 
 func main() {
+	// Windows doesn't natively support color in cmd
+	if runtime.GOOS == "windows" {
+		RESET = ""
+		RED = ""
+		GREEN = ""
+	}
+
 	// If source file path was not passed, then start the REPL
 	if len(os.Args) == 1 {
 		repl.Start(os.Stdin, os.Stdout)
