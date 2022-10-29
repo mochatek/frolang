@@ -1,5 +1,8 @@
 .git
+.github
 .gitignore
 *.png
 *.fro
 *.md
+*.yaml
+LICENSE
