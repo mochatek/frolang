@@ -4,7 +4,7 @@ FroLang is an interpreted, interactive, dynamic typed, open-source toy programmi
 FroLang is purely written in Go, with a syntax that is a hybrid of Python and JS. It contains all the basic features in any programming language along with a wide range of built-in methods for general use. FroLang is portable: it runs on many Unix variants, on the Mac, and on Windows 2000 and later.
 
 <p align="center">
-  <img src="https://github.com/mochatek/frolang/blob/master/logo.png" alt="Logo" />
+  <img src="https://github.com/mochatek/frolang/blob/master/logo.svg" alt="Logo" />
 </p>
 
 __How does it work?__
